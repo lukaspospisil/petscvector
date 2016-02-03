@@ -1,0 +1,12 @@
+nbproject
+
+*.swp
+*.swo
+*.swn
+
+*.o
+*.a
+*.exe
+*.sh
+
+build
