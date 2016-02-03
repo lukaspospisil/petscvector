@@ -122,6 +122,11 @@ class PetscVector {
 		/* vec1 -= vec2 */
 		friend const void operator-=(PetscVector vec1, const PetscVector vec2);
 
+		/* vec1 = vec2 + vec3 */
+		friend const PetscVector operator+(const PetscVector vec2, const PetscVector vec3);
+
+		/* vec1 = vec2 - vec3 */
+		friend const PetscVector operator-(const PetscVector vec2, const PetscVector vec3);
 	
 };
 
@@ -171,6 +176,28 @@ const void operator+=(PetscVector vec1, const PetscVector vec2)
 const void operator-=(PetscVector vec1, const PetscVector vec2)
 {
 	VecAXPY(vec1.inner_vector,-1.0, vec2.inner_vector);
+}
+
+/* vec1 = vec2 + vec3 */
+const PetscVector operator+(const PetscVector vec2, const PetscVector vec3) // TODO: make a wrapper for linear combinations
+{
+	Vec new_inner_vector;
+	VecDuplicate(vec2.inner_vector,&new_inner_vector); 
+	VecCopy(vec2.inner_vector,new_inner_vector); /* vec1 = vec2 */
+	VecAXPY(new_inner_vector,1.0, vec3.inner_vector); /* vec1 += vec3 */
+
+	return PetscVector(new_inner_vector);
+}
+
+/* vec1 = vec2 - vec3 */
+const PetscVector operator-(const PetscVector vec2, const PetscVector vec3) // TODO: make a wrapper for linear combinations
+{
+	Vec new_inner_vector;
+	VecDuplicate(vec2.inner_vector,&new_inner_vector); 
+	VecCopy(vec2.inner_vector,new_inner_vector); /* vec1 = vec2 */
+	VecAXPY(new_inner_vector,-1.0, vec3.inner_vector); /* vec1 -= vec3 */
+
+	return PetscVector(new_inner_vector);
 }
 
 

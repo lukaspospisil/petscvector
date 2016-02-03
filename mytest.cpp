@@ -44,7 +44,7 @@ int main( int argc, char *argv[] )
 	/* --------- addition ----------- */
 	std::cout << "TEST: additions" << std::endl;
 
-	vec1 += vec2;
+	vec1 = vec1 - vec2;
 	std::cout << "vec1: " << vec1 << std::endl;
 	std::cout << "vec2: " << vec2 << std::endl << std::endl;
 	
