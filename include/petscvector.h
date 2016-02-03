@@ -4,16 +4,14 @@
 #include <iostream>
 #include <string>
 
-#define MAX_VIEWER_CHAR 255
-
-class PetscVectorWriter; /* wrapper to allow vector(i) = value */
+class PetscVectorWrapperAssign; /* wrapper to allow vector(i) = value */
 
 /* PETSc Vector */
 class PetscVector {
 		PetscErrorCode ierr; // TODO: I don't know what to do with errors
 		Vec inner_vector;
 	public:
-		/* constructor */
+		/* constructor with given dimension */
 		PetscVector(int n){
 			ierr = VecCreate(PETSC_COMM_WORLD,&inner_vector);
 			ierr = VecSetSizes(inner_vector,PETSC_DECIDE,n);
@@ -22,14 +20,27 @@ class PetscVector {
 			valuesUpdate();
 		}
 
+		/* constructor with given internal Vec */
+		PetscVector(Vec new_inner_vector){
+			inner_vector = new_inner_vector;
+		}
+
+
 		/* destructor */
 		~PetscVector(){
 //			ierr = VecDestroy(&vector);
 		}
 		
 		/* get PETSC original vector */
-		Vec get_vector(){ // TODO: temp
+		Vec get_vector() const { // TODO: temp
 			return inner_vector;
+		}
+		
+		/* get size of the vector */
+		int get_size() const {
+			int global_size;
+			VecGetSize(inner_vector,&global_size);
+			return global_size;
 		}
 
 		/* after update a variable, it is necessary to call asseble begin */
@@ -43,6 +54,19 @@ class PetscVector {
 			VecSetValue(inner_vector,index,new_value, INSERT_VALUES);
 			valuesUpdate();
 		}
+
+		/* set all values of the vector, this function is called from overloaded operator */
+		void set(PetscScalar new_value){
+			VecSet(inner_vector,new_value);
+			valuesUpdate();
+		}
+
+		/* inner_vector = alpha*inner_vector */
+		void scale(PetscScalar alpha){
+			VecScale(inner_vector, alpha);
+			valuesUpdate(); // TODO: has to be called?
+		}
+
 
 		/* stream insertion operator */
 		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector)		
@@ -75,22 +99,44 @@ class PetscVector {
 		}
 
 		/* set value with given id of the vector (works only with local id), will be defined after PetscVector */
-		PetscVectorWriter operator()(int index);
+		PetscVectorWrapperAssign operator()(int index);
+
+		/* vec1 *= alpha */
+		void operator*=(double alpha)
+		{
+			scale(alpha);
+		}
+
+		/* assignment operator (copy) */
+		PetscVector operator=(const PetscVector &new_vector)
+		{
+			VecCopy(new_vector.inner_vector,inner_vector);
+		}
+	
+		/* vec1 = alpha*vec2 */
+		friend const PetscVector operator*(double alpha, const PetscVector vec2);
+
+		/* vec1 += vec2 */
+		friend const void operator+=(PetscVector vec1, const PetscVector vec2);
+
+		/* vec1 -= vec2 */
+		friend const void operator-=(PetscVector vec1, const PetscVector vec2);
+
 	
 };
 
 /* wrapper to allow vector(i) = value */
-class PetscVectorWriter
+class PetscVectorWrapperAssign
 {
 	PetscVector store; /* in this vector we want to store new value */
 	int index; /* index of new value */
 	
 	public:
 		/* constructor */
-		PetscVectorWriter(PetscVector &s, int i): store(s), index(i) {}
+		PetscVectorWrapperAssign(PetscVector &s, int i): store(s), index(i) {}
 		
 		/* define assigment operator */
-		PetscVectorWriter& operator=(PetscScalar const& new_value)
+		PetscVectorWrapperAssign& operator=(PetscScalar const& new_value)
 		{
 			/* I am not able to access private vector, I pass it to orig class */
 			store.set(index,new_value);
@@ -99,9 +145,33 @@ class PetscVectorWriter
 };
 
 /* return wrapper to be able to overload vector(index) = new_value */ 
-PetscVectorWriter PetscVector::operator()(int index)
+PetscVectorWrapperAssign PetscVector::operator()(int index)
 {   
-	return PetscVectorWriter(*this, index);
+	return PetscVectorWrapperAssign(*this, index);
 }
+
+/* vec1 = alpha*vec2 */
+const PetscVector operator*(double alpha, const PetscVector vec2) // TODO: make a wrapper for linear combinations
+{
+	Vec new_inner_vector;
+	VecDuplicate(vec2.inner_vector,&new_inner_vector);
+	VecCopy(vec2.inner_vector,new_inner_vector);
+	VecScale(new_inner_vector,alpha);
+
+	return PetscVector(new_inner_vector);
+}
+
+/* vec1 += vec2 */
+const void operator+=(PetscVector vec1, const PetscVector vec2)
+{
+	VecAXPY(vec1.inner_vector,1.0, vec2.inner_vector);
+}
+
+/* vec1 -= vec2 */
+const void operator-=(PetscVector vec1, const PetscVector vec2)
+{
+	VecAXPY(vec1.inner_vector,-1.0, vec2.inner_vector);
+}
+
 
 #endif
