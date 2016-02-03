@@ -127,6 +127,9 @@ class PetscVector {
 
 		/* vec1 = vec2 - vec3 */
 		friend const PetscVector operator-(const PetscVector vec2, const PetscVector vec3);
+
+		/* dot = dot(vec1,vec2) */
+		friend const double dot(const PetscVector vec1, const PetscVector vec2);
 	
 };
 
@@ -198,6 +201,14 @@ const PetscVector operator-(const PetscVector vec2, const PetscVector vec3) // T
 	VecAXPY(new_inner_vector,-1.0, vec3.inner_vector); /* vec1 -= vec3 */
 
 	return PetscVector(new_inner_vector);
+}
+
+/* dot = dot(vec1,vec2) */
+const double dot(const PetscVector vec1, const PetscVector vec2)
+{
+	double dot_value;
+	VecDot(vec1.inner_vector,vec2.inner_vector,&dot_value);
+	return dot_value;
 }
 
 
