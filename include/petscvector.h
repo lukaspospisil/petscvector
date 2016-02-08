@@ -10,25 +10,33 @@ namespace minlin {
 
 namespace threx { // TODO: maybe choose the different namespace for my own Petsc stuff
  
-class PetscVectorWrapperAssign; /* wrapper to allow vector(i) = value */
 class PetscVectorWrapperComb; /* wrapper to allow manipulation with linear combinations of vectors */
 class PetscVectorWrapperCombNode; /* one node of previous wrapper */
 
 /* PETSc Vector */
 class PetscVector {
 		PetscErrorCode ierr; // TODO: I don't know what to do with errors
-		Vec inner_vector;
+		Vec inner_vector; /* original Petsc Vector */
+		
+		/* subvector stuff */
+		IS subvector_is = PETSC_NULL; /* is NULL if we work with whole vector */
+		Vec inner_vector_orig = PETSC_NULL; /* from which vector we created a subvector? to be able to restore */
+		
 	public:
 
 		PetscVector(int n);
 		PetscVector(const PetscVector &vec1);
 		PetscVector(Vec new_inner_vector);
-		//~PetscVector();
+		PetscVector(Vec old_inner_vector, IS new_subvector_is);
+		PetscVector(double scalar_value);
+
+		
+		~PetscVector();
 
 		void valuesUpdate();
 		void scale(PetscScalar alpha);
 
-		Vec get_vector() const; // TODO: temp
+		Vec get_vector() const; // TODO: temp, direct access to inner vector should be forbidden
 		int get_size();
 		double get(int index);
 
@@ -38,8 +46,9 @@ class PetscVector {
 		PetscVector& operator=(const PetscVector &vec2);
 		PetscVector& operator=(PetscVectorWrapperCombNode wrapper);	
 		PetscVector& operator=(PetscVectorWrapperComb wrapper);	
+		PetscVector& operator=(double scalar_value);	
 		
-		PetscVectorWrapperAssign operator()(int index);
+		PetscVector operator()(int index);
 
 		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector);
 
@@ -48,20 +57,6 @@ class PetscVector {
 		friend void operator-=(PetscVector vec1, const PetscVector vec2);
 		friend double dot(const PetscVector vec1, const PetscVector vec2);
 
-
-};
-
-/* wrapper to allow manipulation with vector(i) */
-class PetscVectorWrapperAssign
-{
-	PetscVector store; /* in this vector we want to store new value */
-	int index; /* index of new value */
-	
-	public:
-		PetscVectorWrapperAssign(PetscVector &s, int i): store(s), index(i) {}
-
-		PetscVectorWrapperAssign& operator=(PetscScalar const& new_value);
-		friend std::ostream &operator<<(std::ostream &output, PetscVectorWrapperAssign wrapper);
 
 };
 
@@ -75,6 +70,7 @@ class PetscVectorWrapperComb
 		PetscVectorWrapperComb();
 		PetscVectorWrapperComb(PetscVectorWrapperCombNode comb_node);
 		PetscVectorWrapperComb(PetscVector vec);
+		PetscVectorWrapperComb(double scalar_value);
 
 		int get_listsize();
 		int get_vectorsize();
@@ -87,7 +83,6 @@ class PetscVectorWrapperComb
 		friend const PetscVectorWrapperComb operator*(double alpha, PetscVectorWrapperComb comb);
 		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
 		friend const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
-
 		
 };
 
@@ -99,8 +94,9 @@ class PetscVectorWrapperCombNode
 		double coeff; /* coefficient in linear combination */
 	
 	public:
-		PetscVectorWrapperCombNode();
+		PetscVectorWrapperCombNode(); // TODO: temp
 		PetscVectorWrapperCombNode(double new_coeff, Vec new_vector);
+		PetscVectorWrapperCombNode(double scalar_value);
 	
 		void set_vector(Vec new_vector);
 		Vec get_vector();
@@ -129,7 +125,7 @@ class PetscVectorWrapperCombNode
 /* PetscVector constructor with global dimension */
 PetscVector::PetscVector(int n){
 	VecCreate(PETSC_COMM_WORLD,&inner_vector);
-	VecSetSizes(inner_vector,PETSC_DECIDE,n);
+	VecSetSizes(inner_vector,PETSC_DECIDE,n); // TODO: there should be more options to set the distribution
 	VecSetFromOptions(inner_vector);
 
 	valuesUpdate();
@@ -146,7 +142,31 @@ PetscVector::PetscVector(Vec new_inner_vector){
 	inner_vector = new_inner_vector;
 }
 
-/* after update a variable, it is necessary to call asseble begin */
+/* PetscVector constructor with given IS = create subvector */
+PetscVector::PetscVector(Vec old_inner_vector, IS new_subvector_is){
+	/* store old inner vector - will be used in the destructor to return subvector */
+	inner_vector_orig = old_inner_vector; 
+	subvector_is = new_subvector_is;
+	
+	/* get subvector, restore it in destructor */
+	VecGetSubVector(inner_vector_orig, subvector_is, &inner_vector);
+	
+}
+
+
+
+/* PetscVector destructor */
+PetscVector::~PetscVector(){
+
+	/* if this was a subvector, then restore values */
+	if(subvector_is != PETSC_NULL){
+		/* restore subvector */
+		VecRestoreSubVector(inner_vector_orig, subvector_is, &inner_vector);
+	}
+	
+}
+
+/* after update a variable, it is necessary to call asseble begin & end */
 void PetscVector::valuesUpdate(){
 	VecAssemblyBegin(inner_vector);
 	VecAssemblyEnd(inner_vector);
@@ -158,7 +178,7 @@ void PetscVector::set(PetscScalar new_value){
 	valuesUpdate();
 }
 
-/* set value of the vector, this function is called from overloaded operator */
+/* set one specific value of the vector, this function is called from overloaded operator */
 void PetscVector::set(int index, PetscScalar new_value){
 	VecSetValue(inner_vector,index,new_value, INSERT_VALUES);
 	valuesUpdate();
@@ -176,7 +196,7 @@ int PetscVector::get_size(){
 	return global_size;
 }
 
-/* get value with given id of the vector (works only with local id), really slow */
+/* get single value with given id of the vector (works only with local id), really slow */
 double PetscVector::get(int i)
 {
 	PetscInt ni = 1;
@@ -229,13 +249,13 @@ PetscVector& PetscVector::operator=(const PetscVector &vec2){
 
 /* vec1 = linear_combination_node, perform simple linear combination */
 PetscVector& PetscVector::operator=(PetscVectorWrapperCombNode wrapper){
-	/* vec1 = alpha*vec1 */
+	/* vec1 = alpha*vec1 => simple scale */
     if (this->inner_vector == wrapper.get_vector()){
         this->scale(wrapper.get_coeff());
         return *this;
 	}
 
-	/* else copy the vector and then scale */
+	/* else copy the vector values and then scale */
 	VecCopy(wrapper.get_vector(),inner_vector);
     this->scale(wrapper.get_coeff());
 
@@ -248,10 +268,10 @@ PetscVector& PetscVector::operator=(PetscVectorWrapperComb wrapper){
 	PetscScalar alphas[list_size];
 	Vec vectors[list_size];
 
-	/* vec1 = 0 */
+	/* vec1 = 0, unfortunatelly we are performing MAXPY (y += lin_comb) */
 	VecSet(inner_vector,0.0);
 
-	/* prepare array with coefficients and vectors */
+	/* get array with coefficients and vectors */
 	wrapper.get_arrays(alphas,vectors);
 	
 	/* vec1 = vec1 + sum (coeff*vector) */
@@ -260,11 +280,23 @@ PetscVector& PetscVector::operator=(PetscVectorWrapperComb wrapper){
 	return *this;	
 }
 
+/* vec1 = scalar_value <=> vec1(all) = scalar_value, assignment operator */
+PetscVector& PetscVector::operator=(double scalar_value){
+	this->set(scalar_value);
+	return *this;	
+}
 
-/* return wrapper to be able to overload vector(index) = new_value */ 
-PetscVectorWrapperAssign PetscVector::operator()(int index)
+/* return subvector to be able to overload vector(index) = new_value */ 
+PetscVector PetscVector::operator()(int index)
 {   
-	return PetscVectorWrapperAssign(*this, index);
+	/* create new indexset */
+	IS new_subvector_is;
+	PetscInt idxs[1];
+	idxs[0] = index;
+	
+	ISCreateGeneral(PETSC_COMM_WORLD, 1, idxs, PETSC_COPY_VALUES, &new_subvector_is);
+	
+	return PetscVector(inner_vector, new_subvector_is);
 }
 
 /* vec1 *= alpha */
@@ -294,25 +326,6 @@ double dot(const PetscVector vec1, const PetscVector vec2)
 }
 
 
-/* --------------------- PetscVectorWrapperAssign ----------------------*/
-
-/* define assigment operator */
-PetscVectorWrapperAssign& PetscVectorWrapperAssign::operator=(PetscScalar const& new_value)
-{
-	/* I am not able to access private vector, I pass it to orig class */
-	store.set(index,new_value);
-	return *this;
-}
-
-/* stream insertion << operator */
-std::ostream &operator<<(std::ostream &output, PetscVectorWrapperAssign wrapper)		
-{
-	double value = wrapper.store.get(wrapper.index);
-	output << value;
-	return output;
-}
-
-
 /* --------------------- PetscVectorWrapperComb ----------------------*/
 
 /* default constructor */
@@ -330,7 +343,16 @@ PetscVectorWrapperComb::PetscVectorWrapperComb(PetscVector vec){
 	/* create node from vector */
 	PetscVectorWrapperCombNode comb_node(1.0,vec.get_vector());
 
-	/* append node */
+	/* append new node to newly created combination */
+	this->append(comb_node);
+}
+
+/* constructor from scalar_value - create Node from value */
+PetscVectorWrapperComb::PetscVectorWrapperComb(double scalar_value){
+	/* create node from scalar_value = create vector of size 1 */
+	PetscVectorWrapperCombNode comb_node(scalar_value);
+
+	/* append it to newly created combination */
 	this->append(comb_node);
 }
 
@@ -340,11 +362,10 @@ void PetscVectorWrapperComb::append(PetscVectorWrapperCombNode new_node){
 	comb_list.push_back(new_node);
 }
 
-/* append new list to the end of old list (merge) */
+/* append new list to the end of old list (merge without sort), will be called from overloaded operator+ */
 void PetscVectorWrapperComb::merge(PetscVectorWrapperComb comb){
 	comb_list.insert(comb_list.end(), comb.comb_list.begin(), comb.comb_list.end());
 }
-
 
 /* get length of the list */
 int PetscVectorWrapperComb::get_listsize(){
@@ -386,7 +407,7 @@ void PetscVectorWrapperComb::get_arrays(PetscScalar *coeffs, Vec *vectors){
 }
 
 
-/* print linear combination */ //TODO: yes, this is really slow, but now I don't care
+/* print linear combination */ //TODO: yes, this is really slow, but now I don't care.. who cares? it is only for testing purposes
 std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb wrapper)
 {
 	PetscInt i,j,vector_size,list_size;
@@ -432,7 +453,7 @@ const PetscVectorWrapperComb operator*(double alpha, PetscVectorWrapperComb comb
 	/* set to the begin of the list */
 	list_iter = comb.comb_list.begin();
 
-	/* go through the list and fill the vectors */
+	/* go through the list and scale nodes */
 	for(j=0;j<list_size;j++){
 		list_iter->scale(alpha);
 		
@@ -466,7 +487,7 @@ const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVector
 
 /* --------------------- PetscVectorWrapperCombNode ----------------------*/
 
-/* default constructor */ //TODO: temp
+/* default constructor */ //TODO: temp, it is not possible to create node without any vector and scalar
 PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(){
 }
 
@@ -474,6 +495,18 @@ PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(){
 PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double new_coeff, Vec new_vector){
 	set_vector(new_vector);
 	set_coeff(new_coeff);
+}
+
+/* create vector from scalar value - to be able to vec(idx) = vec2(idx) + scalar_value */
+PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double scalar_value){
+	/* create sequential petsc vector of size 1 */
+	VecCreateSeq(PETSC_COMM_SELF,1,&(this->inner_vector));
+	VecSet(inner_vector,scalar_value);
+
+	VecAssemblyBegin(inner_vector); // TODO: has to be called?
+	VecAssemblyEnd(inner_vector);
+
+	set_coeff(1.0);
 }
 
 /* set vector to the node */
@@ -491,7 +524,7 @@ void PetscVectorWrapperCombNode::set_coeff(double new_coeff){
 	this->coeff = new_coeff;
 }
 
-/* node was multiplied by scalar */
+/* node is multiplied by scalar, now multiply only the coefficient of linear combination */
 void PetscVectorWrapperCombNode::scale(double alpha){
 	this->coeff *= alpha;
 }

@@ -23,8 +23,6 @@ int main( int argc, char *argv[] )
 	vec1.set(1.0); // TODO: vec1(all) = 2
 	vec2.set(2.0);
 
-	vec1(1) = 3.2;
-
 	std::cout << "vec1: " << vec1 << std::endl;
 	std::cout << "vec2: " << vec2 << std::endl << std::endl;
 
@@ -32,7 +30,6 @@ int main( int argc, char *argv[] )
 	std::cout << "TEST: copy vectors" << std::endl;
 
 	vec2 = vec1;
-	vec2(0) = -1.0;
 	std::cout << "vec1: " << vec1 << std::endl;
 	std::cout << "vec2: " << vec2 << std::endl << std::endl;
 	
@@ -55,7 +52,22 @@ int main( int argc, char *argv[] )
 
 	std::cout << "dot(vec1,vec2): " << dot(vec1,vec2) << std::endl << std::endl;
 
+	/* --------- test smart print of linear combination ---- */
+	std::cout << "TEST: smart print of linear combination " << std::endl;
+
+	std::cout << "linear combination: " << vec1 - 3*vec2 + 0.2*vec1 << std::endl << std::endl;
 	
+
+	/* --------- subvector ----------- */
+	std::cout << "TEST: subvector" << std::endl;
+
+	PetscVector vec3(n);
+	vec3.set(5.0);
+
+	vec3(1) = 5*vec1(2) - 0.5;
+
+	std::cout << "vec3: " << vec3 << std::endl;
+
 
 	PetscFinalize();
 
