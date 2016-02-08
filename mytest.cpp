@@ -2,6 +2,8 @@
 
 #include "petscvector.h"
 
+using namespace minlin::threx;
+
 int main( int argc, char *argv[] )
 {
 
