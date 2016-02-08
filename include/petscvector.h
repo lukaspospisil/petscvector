@@ -19,8 +19,8 @@ class PetscVector {
 		Vec inner_vector; /* original Petsc Vector */
 		
 		/* subvector stuff */
-		IS subvector_is = PETSC_NULL; /* is NULL if we work with whole vector */
-		Vec inner_vector_orig = PETSC_NULL; /* from which vector we created a subvector? to be able to restore */
+		IS subvector_is; /* is NULL if we work with whole vector */
+		Vec inner_vector_orig; /* from which vector we created a subvector? to be able to restore */
 		
 	public:
 
@@ -44,18 +44,19 @@ class PetscVector {
 		void set(int index, PetscScalar new_value);
 
 		PetscVector& operator=(const PetscVector &vec2);
-		PetscVector& operator=(PetscVectorWrapperCombNode wrapper);	
-		PetscVector& operator=(PetscVectorWrapperComb wrapper);	
+		PetscVector& operator=(PetscVectorWrapperCombNode combnode);	
+		PetscVector& operator=(PetscVectorWrapperComb comb);	
 		PetscVector& operator=(double scalar_value);	
 		
 		PetscVector operator()(int index);
+		PetscVector operator()(int index_begin,int index_end);
 
 		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector);
 
 		friend void operator*=(PetscVector vec1, double alpha);
-		friend void operator+=(PetscVector vec1, const PetscVector vec2);
-		friend void operator-=(PetscVector vec1, const PetscVector vec2);
-		friend double dot(const PetscVector vec1, const PetscVector vec2);
+		friend void operator+=(PetscVector vec1, PetscVectorWrapperComb comb);
+		friend void operator-=(PetscVector vec1, PetscVectorWrapperComb comb);
+		friend double dot(const PetscVector vec1, const PetscVector vec2); // TODO: with PetscVectorWrapperComb comb
 
 
 };
@@ -124,6 +125,9 @@ class PetscVectorWrapperCombNode
 
 /* PetscVector constructor with global dimension */
 PetscVector::PetscVector(int n){
+	inner_vector_orig = PETSC_NULL; 
+	subvector_is = PETSC_NULL;
+
 	VecCreate(PETSC_COMM_WORLD,&inner_vector);
 	VecSetSizes(inner_vector,PETSC_DECIDE,n); // TODO: there should be more options to set the distribution
 	VecSetFromOptions(inner_vector);
@@ -248,34 +252,28 @@ PetscVector& PetscVector::operator=(const PetscVector &vec2){
 }
 
 /* vec1 = linear_combination_node, perform simple linear combination */
-PetscVector& PetscVector::operator=(PetscVectorWrapperCombNode wrapper){
+PetscVector& PetscVector::operator=(PetscVectorWrapperCombNode combnode){
 	/* vec1 = alpha*vec1 => simple scale */
-    if (this->inner_vector == wrapper.get_vector()){
-        this->scale(wrapper.get_coeff());
+    if (this->inner_vector == combnode.get_vector()){
+        this->scale(combnode.get_coeff());
         return *this;
 	}
 
 	/* else copy the vector values and then scale */
-	VecCopy(wrapper.get_vector(),inner_vector);
-    this->scale(wrapper.get_coeff());
+	VecCopy(combnode.get_vector(),inner_vector);
+    this->scale(combnode.get_coeff());
 
 	return *this;	
 }
 
 /* vec1 = linear_combination, perform full linear combination */
-PetscVector& PetscVector::operator=(PetscVectorWrapperComb wrapper){
-	int list_size = wrapper.get_listsize();
-	PetscScalar alphas[list_size];
-	Vec vectors[list_size];
+PetscVector& PetscVector::operator=(PetscVectorWrapperComb comb){
 
-	/* vec1 = 0, unfortunatelly we are performing MAXPY (y += lin_comb) */
+	/* vec1 = 0, we will perform MAXPY (y += lin_comb) */
 	VecSet(inner_vector,0.0);
 
-	/* get array with coefficients and vectors */
-	wrapper.get_arrays(alphas,vectors);
-	
-	/* vec1 = vec1 + sum (coeff*vector) */
-	VecMAXPY(inner_vector,list_size,alphas,vectors);
+	/* vec += comb */
+	*this += comb; 
 
 	return *this;	
 }
@@ -299,22 +297,40 @@ PetscVector PetscVector::operator()(int index)
 	return PetscVector(inner_vector, new_subvector_is);
 }
 
+/* return subvector vector(index_begin:index_end), i.e. components with indexes: [index_begin, index_begin+1, ..., index_end] */ 
+PetscVector PetscVector::operator()(int index_begin, int index_end)
+{   
+	/* create new indexset */
+	IS new_subvector_is;
+	ISCreateStride(PETSC_COMM_WORLD, index_end-index_begin+1, index_begin,1, &new_subvector_is);
+	
+	return PetscVector(inner_vector, new_subvector_is);
+}
+
 /* vec1 *= alpha */
 void operator*=(PetscVector vec1, double alpha)
 {
 	vec1.scale(alpha);
 }
 
-/* vec1 += vec2 */
-void operator+=(PetscVector vec1, const PetscVector vec2)
+/* vec1 += comb */
+void operator+=(PetscVector vec1, PetscVectorWrapperComb comb)
 {
-	VecAXPY(vec1.inner_vector,1.0, vec2.inner_vector);
+	int list_size = comb.get_listsize();
+	PetscScalar alphas[list_size];
+	Vec vectors[list_size];
+
+	/* get array with coefficients and vectors */
+	comb.get_arrays(alphas,vectors);
+	
+	/* vec1 = vec1 + sum (coeff*vector) */
+	VecMAXPY(vec1.inner_vector,list_size,alphas,vectors);
 }
 
-/* vec1 -= vec2 */
-void operator-=(PetscVector vec1, const PetscVector vec2)
+/* vec1 -= comb */
+void operator-=(PetscVector vec1, PetscVectorWrapperComb comb)
 {
-	VecAXPY(vec1.inner_vector,-1.0, vec2.inner_vector);
+	vec1 += (-1.0)*comb;
 }
 
 /* dot = dot(vec1,vec2) */
@@ -424,7 +440,13 @@ std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb wrapper)
 		
 		/* for each component go throught the list */
 		for(j=0;j<list_size;j++){
-			output << list_iter->get_coeff() << "*" << list_iter->get_value(i);
+			/* print coeff, if coeff < 0, then print it in () */
+			if(list_iter->get_coeff() < 0.0){
+				output << "(" << list_iter->get_coeff() << ")";
+			} else {
+				output << list_iter->get_coeff(); 
+			}
+			output << "*" << list_iter->get_value(i);
 			if(j < list_size-1){ 
 				/* this is not the last node */
 				output << "+";
@@ -434,7 +456,7 @@ std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb wrapper)
 		
 		if(i < vector_size-1){ 
 			/* this is not the last element */
-			output << ",";
+			output << ", ";
 		}
 	}
 
