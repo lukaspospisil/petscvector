@@ -20,8 +20,8 @@ class PetscVector {
 		Vec inner_vector; /* original Petsc Vector */
 		
 		/* subvector stuff */
-		IS subvector_is; /* is NULL if we work with whole vector */
-		Vec inner_vector_orig; /* from which vector we created a subvector? to be able to restore */
+		IS *subvector_is; /* is NULL if we work with whole vector */
+		Vec *inner_vector_orig; /* from which vector we created a subvector? to be able to restore */
 
 	public:
 
@@ -124,7 +124,7 @@ class PetscVectorWrapperComb
 class PetscVectorWrapperCombNode
 {
 	private:
-		Vec inner_vector; /* pointer to vector in linear combination */
+		Vec *inner_vector; /* pointer to vector in linear combination */
 		double coeff; /* coefficient in linear combination */
 	
 	public:
@@ -158,85 +158,62 @@ class PetscVectorWrapperCombNode
 
 /* PetscVector default constructor */
 PetscVector::PetscVector(){
-	if(DEBUG_MODE >= 100) std::cout << "empty constructor" << std::endl;
+	if(DEBUG_MODE >= 100) std::cout << "CONSTRUCTOR: empty" << std::endl;
 
-	inner_vector = PETSC_NULL;
-	inner_vector_orig = PETSC_NULL; 
-	subvector_is = PETSC_NULL;
+	inner_vector = NULL;
+	inner_vector_orig = NULL;
+	subvector_is = NULL;
 }
 
 
 /* PetscVector constructor with global dimension */
 PetscVector::PetscVector(int n){
-	if(DEBUG_MODE >= 100) std::cout << "constructor PetscVector(int)" << std::endl;
+	if(DEBUG_MODE >= 100) std::cout << "CONSTRUCTOR: PetscVector(int)" << std::endl;
 
-	inner_vector_orig = PETSC_NULL; 
-	subvector_is = PETSC_NULL;
+	inner_vector_orig = NULL; 
+	subvector_is = NULL;
 
-	VecCreate(PETSC_COMM_WORLD,&inner_vector);
-	VecSetSizes(inner_vector,PETSC_DECIDE,n); // TODO: there should be more options to set the distribution
-	VecSetFromOptions(inner_vector);
+	VecCreate(PETSC_COMM_WORLD,inner_vector);
+	VecSetSizes(*inner_vector,PETSC_DECIDE,n); // TODO: there should be more options to set the distribution
+	VecSetFromOptions(*inner_vector);
 
 	valuesUpdate();
 }
 
 /* PetscVector copy constructor */
 PetscVector::PetscVector(const PetscVector &vec1){
-	if(DEBUG_MODE >= 100) std::cout << "constructor PetscVector(&vec)" << std::endl;
+	if(DEBUG_MODE >= 100) std::cout << "CONSTRUCTOR: PetscVector(&vec)" << std::endl;
 
 	/* inner_vec */
-	VecDuplicate(vec1.inner_vector,&inner_vector);
-	VecCopy(vec1.inner_vector,inner_vector);
-
-	/* orig_vec */
-	if(vec1.subvector_is){
-		if(DEBUG_MODE >= 100) std::cout << " - copy also subvector_is" << std::endl;
-		
-		ISDuplicate(vec1.subvector_is,&subvector_is);
-		ISCopy(vec1.subvector_is,subvector_is);
-
-		VecDuplicate(vec1.inner_vector_orig,&inner_vector_orig);
-		VecCopy(vec1.inner_vector_orig,inner_vector_orig);
-
-	} else {
-		inner_vector_orig = PETSC_NULL; 
-		subvector_is = PETSC_NULL;
-	}
-	
-/*	inner_vector = vec1.inner_vector;
-	is_subvector = vec1.is_subvector;
+	inner_vector = vec1.inner_vector;
 	subvector_is = vec1.subvector_is;
-	inner_vector_orig = vec1.inner_vector_orig;
-*/
-
-//	VecCopy(vec1.inner_vector,inner_vector);
+	
 }
 
 /* PetscVector constructor with inner_vector */
-PetscVector::PetscVector(Vec new_inner_vector){
-	if(DEBUG_MODE >= 100) std::cout << "constructor PetscVector(inner_vector)" << std::endl;
+PetscVector::PetscVector(Vec *new_inner_vector){
+	if(DEBUG_MODE >= 100) std::cout << "CONSTRUCTOR: PetscVector(inner_vector)" << std::endl;
 
 	inner_vector = new_inner_vector;
 
-	subvector_is = PETSC_NULL;
-	inner_vector_orig = PETSC_NULL;	
+	subvector_is = NULL;
+	inner_vector_orig = NULL;	
 }
 
 /* PetscVector constructor with given IS = create subvector */
-PetscVector::PetscVector(Vec old_inner_vector, IS new_subvector_is){
-	if(DEBUG_MODE >= 100) std::cout << "constructor PetscVector(inner_vec, IS)" << std::endl;
+PetscVector::PetscVector(Vec *old_inner_vector, IS *new_subvector_is){
+	if(DEBUG_MODE >= 100) std::cout << "CONSTRUCTOR: PetscVector(inner_vec, IS)" << std::endl;
 
 	/* store old inner vector - will be used in the destructor to return subvector */
 	inner_vector_orig = old_inner_vector; 
 
 	/* copy IS */
-	ISDuplicate(new_subvector_is, &subvector_is);
-	ISCopy(new_subvector_is, subvector_is);
+	subvector_is = new_subvector_is);
 
 	if(DEBUG_MODE >= 100) std::cout << " - get subvector from original vector" << std::endl;
 
 	/* get subvector, restore it in destructor */
-	VecGetSubVector(inner_vector_orig, subvector_is, &inner_vector);
+	VecGetSubVector(*inner_vector_orig, *subvector_is, inner_vector);
 	
 }
 
@@ -251,23 +228,24 @@ PetscVector::~PetscVector(){
 		/* restore subvector */
 		if(DEBUG_MODE >= 100) std::cout << "restore subvector" << std::endl;
 
-		VecRestoreSubVector(inner_vector_orig, subvector_is, &inner_vector);
-//		inner_vector_orig = PETSC_NULL; 
+		VecRestoreSubVector(*inner_vector_orig, *subvector_is, inner_vector);
+//		inner_vector_orig = NULL; 
 
-		if(DEBUG_MODE >= 100) std::cout << "destroy index set" << std::endl;
+//		if(DEBUG_MODE >= 100) std::cout << "destroy index set" << std::endl;
 
-		ISDestroy(&subvector_is);
-		subvector_is = PETSC_NULL;
-		inner_vector = PETSC_NULL;
+//		ISDestroy(&subvector_is);
+		subvector_is = NULL;
+		inner_vector = NULL;
 		
 	} else {
 
 		/* if there was any inner vector, then destroy it */
-		if(inner_vector){
+/*		if(inner_vector){
 			if(DEBUG_MODE >= 100) std::cout << "destroy inner vector" << std::endl;
 		
 			VecDestroy(&inner_vector);
 		}
+*/
 	}
 
 }
