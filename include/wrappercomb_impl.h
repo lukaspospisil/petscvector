@@ -1,3 +1,5 @@
+#ifndef PETSCVECTOR_WRAPPERCOMB_IMPL_H
+#define	PETSCVECTOR_WRAPPERCOMB_IMPL_H
 
 namespace minlin {
 
@@ -14,16 +16,16 @@ PetscVectorWrapperComb::PetscVectorWrapperComb(){
 }
 
 /* constructor from node */
-PetscVectorWrapperComb::PetscVectorWrapperComb(PetscVectorWrapperCombNode &comb_node){
-	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: comb_node" << std::endl;
+PetscVectorWrapperComb::PetscVectorWrapperComb(const PetscVectorWrapperCombNode &comb_node){
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: WrapperComb" << std::endl;
 
 	/* append node */
 	this->append(comb_node);
 }
 
 /* constructor from vec */
-PetscVectorWrapperComb::PetscVectorWrapperComb(PetscVector &vec){
-	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: vec" << std::endl;
+PetscVectorWrapperComb::PetscVectorWrapperComb(const PetscVector &vec){
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: PetscVector" << std::endl;
 
 	/* create node from vector */
 	PetscVectorWrapperCombNode comb_node(1.0,vec.get_vector());
@@ -33,7 +35,7 @@ PetscVectorWrapperComb::PetscVectorWrapperComb(PetscVector &vec){
 }
 
 /* constructor from scalar_value - create Node from value */
-PetscVectorWrapperComb::PetscVectorWrapperComb(double scalar_value){
+PetscVectorWrapperComb::PetscVectorWrapperComb(const double &scalar_value){
 	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: double" << std::endl;
 
 	/* create node from scalar_value = create vector of size 1 */
@@ -45,7 +47,7 @@ PetscVectorWrapperComb::PetscVectorWrapperComb(double scalar_value){
 
 /* constructor from subvector */
 PetscVectorWrapperComb::PetscVectorWrapperComb(PetscVectorWrapperSub subvector){
-	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: from subvector" << std::endl;
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: WrapperSub" << std::endl;
 
 	/* create node from vector */
 	PetscVectorWrapperCombNode comb_node(1.0,subvector.get_subvector());
@@ -64,10 +66,13 @@ PetscVectorWrapperComb::~PetscVectorWrapperComb(){
 }
 
 /* append new node to the list */
-void PetscVectorWrapperComb::append(PetscVectorWrapperCombNode &new_node){
+void PetscVectorWrapperComb::append(const PetscVectorWrapperCombNode &new_node){
 	if(DEBUG_MODE >= 100) std::cout << "(WrapperComb)FUNCTION: append(WrapperCombNode)" << std::endl;
 	
 	comb_list.push_back(new_node);
+	
+	/* store the size of the new node */
+	this->vector_size = new_node.get_size();
 }
 
 /* append new list to the end of old list (merge without sort), will be called from overloaded operator+ */
@@ -78,24 +83,17 @@ void PetscVectorWrapperComb::merge(PetscVectorWrapperComb &comb){
 }
 
 /* get length of the list */
-int PetscVectorWrapperComb::get_listsize(){
+int PetscVectorWrapperComb::get_listsize() const {
 	return comb_list.size();
 }
 
 /* get size of the vectors in the list */
-int PetscVectorWrapperComb::get_vectorsize(){
-	std::list<PetscVectorWrapperCombNode>::iterator list_iter; /* iterator through list */
-	PetscInt vector_size;
-
-	/* get first element and obtain a size of the vector */
-	list_iter = comb_list.begin();
-	vector_size = list_iter->get_size();
-
+int PetscVectorWrapperComb::get_vectorsize() const {
 	return vector_size;
 }
 
 /* get frist vector from the list */
-Vec PetscVectorWrapperComb::get_first_vector(){
+Vec PetscVectorWrapperComb::get_first_vector() {
 	std::list<PetscVectorWrapperCombNode>::iterator list_iter; /* iterator through list */
 	Vec vector;
 
@@ -261,7 +259,7 @@ void PetscVectorWrapperCombNode::set_vector(Vec new_vector){
 }
 
 /* return vector from this node */
-Vec PetscVectorWrapperCombNode::get_vector(){
+Vec PetscVectorWrapperCombNode::get_vector() const{
 	return this->inner_vector;
 }
 
@@ -276,19 +274,19 @@ void PetscVectorWrapperCombNode::scale(double alpha){
 }
 
 /* get the coefficient from this node */
-double PetscVectorWrapperCombNode::get_coeff(){
+double PetscVectorWrapperCombNode::get_coeff() const{
 	return this->coeff;
 }
 
 /* get size of the vector */
-int PetscVectorWrapperCombNode::get_size(){
+int PetscVectorWrapperCombNode::get_size() const{
 	int global_size;
 	TRY( VecGetSize(this->inner_vector,&global_size) );
 	return global_size;
 }
 
 /* get value from the vector, really slow */
-int PetscVectorWrapperCombNode::get_value(int index){
+int PetscVectorWrapperCombNode::get_value(int index) const{
 	PetscInt ni = 1;
 	PetscInt ix[1];
 	PetscScalar y[1];
@@ -322,6 +320,8 @@ std::ostream &operator<<(std::ostream &output, PetscVectorWrapperCombNode &wrapp
 
 
 
-}
+} /* end of namespace */
 
-}
+} /* end of MinLin namespace */
+
+#endif

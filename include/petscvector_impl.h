@@ -1,11 +1,25 @@
+#ifndef PETSCVECTOR_IMPL_H
+#define	PETSCVECTOR_IMPL_H
+
 namespace minlin {
 
 namespace threx { // TODO: maybe choose the different namespace for my own Petsc stuff
  
+/* minlin all */
+/*PetscVectorWrapperSub PetscVector::operator()(minlin::detail::all_type add_in) const{
+	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec(all)" << std::endl;
+
+	IS new_subvector_is; // TODO: this is quite stupid, what about returning *this?
+	ISCreateStride(PETSC_COMM_WORLD, this->size(), 0,1, &new_subvector_is);
+	
+	return PetscVectorWrapperSub(this->inner_vector, new_subvector_is, true);
+} 
+ */
+ 
 /*! \fn PetscVector
     \brief Default constructor.
     
-    No vector space allocated.
+    No vector allocated.
 */
 PetscVector::PetscVector(){
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)CONSTRUCTOR: empty" << std::endl;
@@ -27,10 +41,13 @@ PetscVector::PetscVector(int n){
 
 /* PetscVector copy constructor */
 PetscVector::PetscVector(const PetscVector &vec1){
-	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(&vec)" << std::endl;
+	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(&vec) ---- DUPLICATE ----" << std::endl;
 
 	/* inner_vec */
-	inner_vector = vec1.inner_vector;
+//	inner_vector = vec1.inner_vector;
+	// TODO: there is duplicate... this function has to be called as less as possible
+	TRY( VecDuplicate(vec1.inner_vector, &inner_vector) );
+	TRY( VecCopy(vec1.inner_vector, inner_vector) );
 	
 }
 
@@ -63,7 +80,7 @@ PetscVector::~PetscVector(){
 }
 
 /* after update a variable, it is necessary to call asseble begin & end */
-void PetscVector::valuesUpdate(){
+void PetscVector::valuesUpdate() const{
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: valuesUpdate()" << std::endl;
 
 	TRY( VecAssemblyBegin(inner_vector) );
@@ -100,7 +117,7 @@ Vec PetscVector::get_vector() const { // TODO: temp
 }
 
 /* get size of the vector */
-int PetscVector::size(){
+int PetscVector::size() const{
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: size()" << std::endl;
 
 	int global_size;
@@ -109,6 +126,18 @@ int PetscVector::size(){
 
 	return global_size;
 }
+
+/* get local size of the vector */
+int PetscVector::local_size() const{
+	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: local_size()" << std::endl;
+
+	int local_size;
+
+	TRY( VecGetLocalSize(inner_vector,&local_size) );
+
+	return local_size;
+}
+
 
 /* get single value with given id of the vector (works only with local id), really slow */
 double PetscVector::get(int i)
@@ -264,24 +293,26 @@ PetscVector &PetscVector::operator=(double scalar_value){
 }
 
 /* return subvector to be able to overload vector(index) = new_value */ 
-PetscVectorWrapperSub PetscVector::operator()(int index)
+PetscVectorWrapperSub PetscVector::operator()(int index) const
 {   
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: (int) returns WrapperSub" << std::endl;
 	
 	/* create new indexset */
 	if(DEBUG_MODE >= 100) std::cout << " - create index set" << std::endl;
 	IS new_subvector_is;
-	PetscInt idxs[1];
+	PetscInt *idxs;
+	TRY(PetscMalloc(sizeof(PetscInt),&idxs));
+	
 	idxs[0] = index;
 	
-	TRY( ISCreateGeneral(PETSC_COMM_WORLD, 1, idxs, PETSC_COPY_VALUES, &new_subvector_is));
+	TRY( ISCreateGeneral(PETSC_COMM_WORLD, 1, idxs, PETSC_OWN_POINTER, &new_subvector_is));
 	// TODO: when to delete this index set?
 	
 	return PetscVectorWrapperSub(this->inner_vector, new_subvector_is, true);
 }
 
 /* return subvector vector(index_begin:index_end), i.e. components with indexes: [index_begin, index_begin+1, ..., index_end] */ 
-PetscVectorWrapperSub PetscVector::operator()(int index_begin, int index_end)
+PetscVectorWrapperSub PetscVector::operator()(int index_begin, int index_end) const
 {   
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: (int,int) returns WrapperSub" << std::endl;
 
@@ -295,7 +326,7 @@ PetscVectorWrapperSub PetscVector::operator()(int index_begin, int index_end)
 }
 
 /* return subvector based on provided index set */ 
-PetscVectorWrapperSub PetscVector::operator()(const IS new_subvector_is) // TODO: are ju sure that this IS will be nt destroyed?
+PetscVectorWrapperSub PetscVector::operator()(const IS new_subvector_is) const // TODO: are ju sure that this IS will be nt destroyed?
 {   
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec(IS)" << std::endl;
 	
@@ -318,8 +349,12 @@ void operator+=(PetscVector &vec1, PetscVectorWrapperComb comb)
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec += comb" << std::endl;
 	
 	int list_size = comb.get_listsize();
-	PetscScalar alphas[list_size];
-	Vec vectors[list_size];
+	PetscScalar *alphas;
+	Vec *vectors;
+
+	/* allocate memory */
+	TRY(PetscMalloc(sizeof(PetscScalar)*list_size,&alphas));
+	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
 
 	/* get array with coefficients and vectors */
 	comb.get_arrays(alphas,vectors);
@@ -328,6 +363,10 @@ void operator+=(PetscVector &vec1, PetscVectorWrapperComb comb)
 	if(DEBUG_MODE >= 100) std::cout << " - perform MAXPY" << std::endl;
 	VecMAXPY(vec1.inner_vector,list_size,alphas,vectors);
 	vec1.valuesUpdate();
+
+	/* free memory */
+	TRY(PetscFree(alphas));
+	TRY(PetscFree(vectors));
 
 }
 
@@ -339,51 +378,8 @@ void operator-=(PetscVector &vec1, PetscVectorWrapperComb comb)
 	vec1 += (-1.0)*comb;
 }
 
-/* vec1 == scalar */
-bool operator==(PetscVector &vec1, double alpha){
-	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec == double" << std::endl;	
-	
-	bool return_value = false; // TODO: works only with vector of size 1, otherwise compare only first value
-	double vector_value = vec1.get(0);
-	
-	if(vector_value == alpha){
-		return_value = true;
-	}	
-	
-	return return_value;
-}
-
-/* vec1 == vec2 */
-bool operator==(PetscVector &vec1, PetscVector &vec2){
-	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec1 == vec2" << std::endl;
-
-	PetscBool return_value;
-
-	TRY( VecEqual(vec1.inner_vector,vec2.inner_vector,&return_value) );
-	
-	return (bool)return_value;
-}
-
-/* vec1 > vec2 */
-bool operator>(PetscVector &vec1, PetscVector &vec2){
-	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec1 > vec2" << std::endl;
-
-	bool return_value = false; // TODO: works only with vector of size 1, otherwise compare only first value
-	
-	double vec1_value = vec1.get(0);
-	double vec2_value = vec2.get(0);
-	
-	if(vec1_value > vec2_value){
-		return_value = true;
-	}	
-	
-	return return_value;
-
-}
-
-
 /* dot = dot(vec1,vec2) */
-double dot(const PetscVector vec1, const PetscVector vec2)
+double dot(const PetscVector &vec1, const PetscVector &vec2)
 {
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: dot(vec1,vec2)" << std::endl;
 
@@ -392,8 +388,18 @@ double dot(const PetscVector vec1, const PetscVector vec2)
 	return dot_value;
 }
 
+/* norm = norm_2(vec1) */
+double norm(const PetscVector &vec1)
+{
+	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: norm(vec1)" << std::endl;
+
+	double norm_value;
+	TRY( VecNorm(vec1.inner_vector,NORM_2, &norm_value));
+	return norm_value;
+}
+
 /* max = max(vec1) */
-double max(const PetscVector vec1)
+double max(const PetscVector &vec1)
 {
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: max(vec)" << std::endl;
 
@@ -403,7 +409,7 @@ double max(const PetscVector vec1)
 }
 
 /* sum = sum(vec1) */
-double sum(const PetscVector vec1)
+double sum(const PetscVector &vec1)
 {
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: sum(vec)" << std::endl;
 
@@ -413,7 +419,7 @@ double sum(const PetscVector vec1)
 }
 
 /* vec3 = vec1./vec2 */
-const PetscVector operator/(PetscVector vec1, const PetscVector vec2)
+const PetscVector operator/(const PetscVector &vec1, const PetscVector &vec2)
 {
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: vec1/vec2" << std::endl;
 
@@ -430,3 +436,4 @@ const PetscVector operator/(PetscVector vec1, const PetscVector vec2)
 
 } /* end of MinLin namespace */
 
+#endif

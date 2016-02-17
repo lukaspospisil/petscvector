@@ -1,3 +1,6 @@
+#ifndef PETSCVECTOR_WRAPPERSUB_IMPL_H
+#define	PETSCVECTOR_WRAPPERSUB_IMPL_H
+
 
 namespace minlin {
 
@@ -58,8 +61,24 @@ Vec PetscVectorWrapperSub::get_subvector(){
 	return this->subvector;
 }
 
+/* get single value with given id of the vector (works only with local id), really slow */
+double PetscVectorWrapperSub::get(int i)
+{
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)FUNCTION: get(int)" << std::endl;
+
+	PetscInt ni = 1;
+	PetscInt ix[1];
+	PetscScalar y[1];
+			
+	ix[0] = i;
+
+	TRY( VecGetValues(subvector,ni,ix,y) );
+			
+	return y[0];
+}
+
 /* after update a variable, it is necessary to call asseble begin & end */
-void PetscVectorWrapperSub::valuesUpdate(){
+void PetscVectorWrapperSub::valuesUpdate() const {
 	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)FUNCTION: valuesUpdate()" << std::endl;
 
 	TRY( VecAssemblyBegin(subvector) );
@@ -67,7 +86,7 @@ void PetscVectorWrapperSub::valuesUpdate(){
 }
 
 /* subvector = alpha*subvector */
-void PetscVectorWrapperSub::scale(PetscScalar alpha){
+void PetscVectorWrapperSub::scale(PetscScalar alpha) const{
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: scale(double)" << std::endl;
 
 	//TODO: control subvector
@@ -112,6 +131,25 @@ PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(double scalar_value){
 	return *this;	
 }
 
+/* subvec1 = subvec2, assignment operator (set subvector) */
+PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(PetscVectorWrapperSub subvec2){
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: (subvec = subvec)" << std::endl;
+
+	/* vec1 is not initialized yet */
+	if (!subvector){
+		//TODO: give error
+	}
+
+	/* else copy the values of inner vectors */
+	if(DEBUG_MODE >= 100) std::cout << " - copy values" << std::endl;		
+	
+	VecCopy(subvec2.get_subvector(),subvector);
+	this->valuesUpdate(); // TODO: has to be called?
+	
+	return *this;	
+}
+
+
 /* subvec1 = vec2, assignment operator (set vector) */
 PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(const PetscVector &vec2){
 	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: (subvec = vec)" << std::endl;
@@ -133,26 +171,26 @@ PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(const PetscVector &vec2)
 
 
 /* vec1 = linear_combination_node, perform simple linear combination */
-PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(PetscVectorWrapperCombNode combnode){
-	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: (subvec = combnode)" << std::endl;
+//PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(const PetscVectorWrapperCombNode combnode){
+//	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: (subvec = combnode)" << std::endl;
 
 	/* vec1 is not initialized yet */
-	if (!subvector){
+//	if (!subvector){
 		//TODO: give error
-	}
+//	}
 
 	/* else copy the vector values and then scale */
-	if(DEBUG_MODE >= 100) std::cout << " - copy values" << std::endl;		
+//	if(DEBUG_MODE >= 100) std::cout << " - copy values" << std::endl;		
 
-	TRY( VecCopy(combnode.get_vector(),subvector));
+//	TRY( VecCopy(combnode.get_vector(),subvector));
 	
-    this->scale(combnode.get_coeff());
+//    this->scale(combnode.get_coeff());
 
-	return *this;	
-}
+//	return *this;	
+//}
 
 /* vec1 = linear_combination, perform full linear combination */
-PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(PetscVectorWrapperComb comb){
+PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(const PetscVectorWrapperComb &comb){
 	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: (subvec = comb)" << std::endl;
 
 	/* vec1 is not initialized yet */
@@ -165,50 +203,134 @@ PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(PetscVectorWrapperComb c
 	TRY( VecSet(subvector,0.0) );
 
 	/* subvec += comb */
-//	*this += comb; 
+	*this += comb; 
 
 	return *this;	
 }
 
 /* subvec *= alpha */
-void operator*=(PetscVectorWrapperSub vec1, double alpha)
+void operator*=(const PetscVectorWrapperSub &subvec1, double alpha)
 {
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec *= double" << std::endl;
 	
-	vec1.scale(alpha);
+	subvec1.scale(alpha);
 }
 
 /* vec1 += comb */
-void operator+=(PetscVectorWrapperSub vec1, PetscVectorWrapperComb comb)
+void operator+=(const PetscVectorWrapperSub &subvec, PetscVectorWrapperComb comb)
 {
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec += comb" << std::endl;
 	
 	int list_size = comb.get_listsize();
-	PetscScalar alphas[list_size];
-	Vec vectors[list_size];
+	
+	PetscScalar *alphas;
+	Vec *vectors;
+
+	/* allocate memory */
+	TRY(PetscMalloc(sizeof(PetscScalar)*list_size,&alphas));
+	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
 
 	/* get array with coefficients and vectors */
 	comb.get_arrays(alphas,vectors);
 
 	/* vec1 = vec1 + sum (coeff*vector) */
 	if(DEBUG_MODE >= 100) std::cout << " - perform MAXPY" << std::endl;
-	VecMAXPY(vec1.subvector,list_size,alphas,vectors);
-	vec1.valuesUpdate();
+	VecMAXPY(subvec.subvector,list_size,alphas,vectors);
+	subvec.valuesUpdate();
+
+	/* free memory */
+	TRY(PetscFree(alphas));
+	TRY(PetscFree(vectors));
+
 
 }
 
-/* vec1 -= comb */
-void operator-=(PetscVectorWrapperSub vec1, PetscVectorWrapperComb comb)
+/* subvec1 -= comb */
+void operator-=(const PetscVectorWrapperSub &subvec1, PetscVectorWrapperComb comb)
 {
-	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)OPERATOR: vec -= comb" << std::endl;
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: subvec -= comb" << std::endl;
 	
-	vec1 += (-1.0)*comb;
+	subvec1 += (-1.0)*comb;
+}
+
+/* vec1 = vec1./subvec2 */
+void operator/=(const PetscVectorWrapperSub &subvec1, const PetscVectorWrapperSub subvec2)
+{
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)FUNCTION: vec1/vec2" << std::endl;
+
+	TRY(VecPointwiseDivide(subvec1.subvector,subvec1.subvector,subvec2.subvector) );
+
+	subvec1.valuesUpdate(); // TODO: has to be called?
+
+}
+
+
+/* subvec == scalar */
+bool operator==(PetscVectorWrapperSub subvec, double alpha){
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: subvec == double" << std::endl;	
+	
+	bool return_value = false; // TODO: works only with vector of size 1, otherwise compare only first value
+	double vector_value = subvec.get(0);
+	
+	if(vector_value == alpha){
+		return_value = true;
+	}	
+	
+	return return_value;
+}
+
+/* vec1 == vec2 */
+bool operator==(PetscVectorWrapperSub subvec1, PetscVectorWrapperSub subvec2){
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: subvec1 == subvec2" << std::endl;
+
+	PetscBool return_value;
+
+	TRY( VecEqual(subvec1.subvector,subvec2.subvector,&return_value) );
+	
+	return (bool)return_value;
+}
+
+/* subvec1 > subvec2 */
+bool operator>(PetscVectorWrapperSub subvec1, PetscVectorWrapperSub subvec2){
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)OPERATOR: subvec1 > subvec2" << std::endl;
+
+	bool return_value = false; // TODO: works only with vector of size 1, otherwise compare only first value
+	
+	double vec1_value = subvec1.get(0);
+	double vec2_value = subvec2.get(0);
+	
+	if(vec1_value > vec2_value){
+		return_value = true;
+	}	
+	
+	return return_value;
+
+}
+
+/* sum = sum(subvec1) */
+double sum(const PetscVectorWrapperSub subvec1)
+{
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)FUNCTION: sum(subvec)" << std::endl;
+
+	double sum_value;
+	TRY( VecSum(subvec1.subvector,&sum_value) );
+	return sum_value;
+}
+
+/* dot = dot(subvec1,subvec2) */
+double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subvec2)
+{
+	if(DEBUG_MODE >= 100) std::cout << "(WrapperSub)FUNCTION: dot(subvec1,subvec2)" << std::endl;
+
+	double dot_value;
+	TRY( VecDot(subvec1.subvector,subvec2.subvector,&dot_value));
+	return dot_value;
 }
 
 
 
+} /* end of namespace */
 
+} /* end of MinLin namespace */
 
-}
-
-}
+#endif
