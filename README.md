@@ -1,13 +1,11 @@
 # petscvector
 
-Simple C++ Petsc wrapper for manipulation with vectors
-
-Created by Lukas Pospisil, USI Lugano, 2016
+Simple C++ Petsc wrapper for manipulation with vectors. The library provides basic vector operations for Petsc Vec in MinLin-Matlab-style using overloaded operations.
 
 Inspirated by [MINLIN](https://github.com/bcumming/minlin) 
 (Minimal linear algebra library, Timothy Moroney, Ben Cumming)
 
-The library provides basic vector operations for Petsc Vec in MinLin-Matlab-style using overloaded operations.
+>Created by Lukas Pospisil, USI Lugano, 2016 (during PASC-HPC-Causality project - Illia Horenko, Patrick Gagliardini, Will Sawyer)
 
 ## Installation on PIZ Daint and the first fun
 - log into ELA machine using `ssh username@ela.cscs.ch` and afterwards into PIZ Daint using `ssh daint`
