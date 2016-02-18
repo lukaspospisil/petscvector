@@ -68,7 +68,7 @@ Currently there are only few operations available. See the list bellow.
 - `std::ostream &operator<<(std::ostream &output, const PetscVector &vector)` [ std::cout << y ] - print the vector, I decided to write my own function, not to use VecView
 - `void operator*=(PetscVector &vec1, double alpha)` [ y*=alpha ] - scale vector values, call scale(alpha)
 - `void operator+=(PetscVector &vec1, const PetscVectorWrapperComb comb)` [ y+=sum{alpha_i*x_i} ]
-- `void operator-=(PetscVector &vec1, const PetscVectorWrapperComb comb)` [ y*=sum{alpha_i*x_i} ]
+- `void operator-=(PetscVector &vec1, const PetscVectorWrapperComb comb)` [ y-=sum{alpha_i*x_i} ]
 
 ###### basic linear algebra functions
 
