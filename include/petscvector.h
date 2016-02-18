@@ -39,12 +39,11 @@ class PetscVector {
 		PetscVector(int n);
 		PetscVector(const PetscVector &vec1);
 		PetscVector(Vec new_inner_vector);
-		PetscVector(double scalar_value);
 		
 		~PetscVector();
 
 		void valuesUpdate() const;
-		void scale(PetscScalar alpha);
+		void scale(double alpha);
 
 		Vec get_vector() const; // TODO: temp, direct access to inner vector should be forbidden
 		int size() const;

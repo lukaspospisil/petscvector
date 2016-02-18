@@ -15,11 +15,13 @@ namespace threx { // TODO: maybe choose the different namespace for my own Petsc
 	return PetscVectorWrapperSub(this->inner_vector, new_subvector_is, true);
 } 
  */
+
  
 /*! \fn PetscVector
     \brief Default constructor.
     
-    No vector allocated.
+    No inner Vec allocated (=NULL). This could be performed during the first use.
+    
 */
 PetscVector::PetscVector(){
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)CONSTRUCTOR: empty" << std::endl;
@@ -28,7 +30,12 @@ PetscVector::PetscVector(){
 }
 
 
-/* PetscVector constructor with global dimension */
+/*! \fn PetscVector
+    \brief Constructor with given global size of inner vector.
+    
+    Allocate global Vec (VecCreate) with global dimension n.
+    
+*/
 PetscVector::PetscVector(int n){
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(int)" << std::endl;
 
@@ -39,17 +46,22 @@ PetscVector::PetscVector(int n){
 	valuesUpdate();
 }
 
-/* PetscVector copy constructor */
+
+/*! \fn PetscVector
+    \brief Duplicate and copy constructor.
+    
+	Duplicate inner vector (VecDuplicate) and copy values (VecCopy).
+    
+*/
 PetscVector::PetscVector(const PetscVector &vec1){
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(&vec) ---- DUPLICATE ----" << std::endl;
 
-	/* inner_vec */
-//	inner_vector = vec1.inner_vector;
-	// TODO: there is duplicate... this function has to be called as less as possible
+	/* there is duplicate... this function has to be called as less as possible */
 	TRY( VecDuplicate(vec1.inner_vector, &inner_vector) );
 	TRY( VecCopy(vec1.inner_vector, inner_vector) );
 	
 }
+
 
 /* PetscVector constructor with inner_vector */
 PetscVector::PetscVector(Vec new_inner_vector){
@@ -60,8 +72,12 @@ PetscVector::PetscVector(Vec new_inner_vector){
 
 
 
-
-/* PetscVector destructor */
+/*! \fn ~PetscVector
+    \brief Destructor.
+    
+	Destroy inner Vec (VecDestroy).
+    
+*/
 PetscVector::~PetscVector(){
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)DESTRUCTOR" << std::endl;
 
@@ -176,7 +192,7 @@ void PetscVector::get_ownership(int *low, int *high){
 }
 
 /* inner_vector = alpha*inner_vector */
-void PetscVector::scale(PetscScalar alpha){
+void PetscVector::scale(double alpha){
 	if(DEBUG_MODE >= 100) std::cout << "(PetscVector)FUNCTION: scale(double)" << std::endl;
 
 	//TODO: control inner_vector
