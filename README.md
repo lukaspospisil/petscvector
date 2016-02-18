@@ -76,5 +76,4 @@ Currently there are only few operations available. See the list bellow.
 - `double max(const PetscVector &vec1)` [ max(vec1) ] - get maximum value in vector using VecMax 
 - `double sum(const PetscVector &vec1)` [ sum(vec1) ] - compute the sum of the vector values using VecSum
 - `double norm(const PetscVector &vec1)` [ norm(vec1) ] - compute the NORM_2 of the vector using VecNorm
-
 - `const PetscVector operator/(const PetscVector &vec1, const PetscVector &vec2)` [vec3 = vec1/vec2]
