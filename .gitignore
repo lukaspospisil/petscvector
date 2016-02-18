@@ -9,4 +9,4 @@ nbproject
 *.exe
 *.sh
 
-build
+tests/build
