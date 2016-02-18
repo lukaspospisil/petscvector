@@ -5,7 +5,7 @@ Simple C++ Petsc wrapper for manipulation with vectors. The library provides bas
 Inspirated by [MINLIN](https://github.com/bcumming/minlin) 
 (Minimal linear algebra library, Timothy Moroney, Ben Cumming)
 
->Created by Lukas Pospisil, USI Lugano, 2016 (during PASC-HPC-Causality project - Illia Horenko, Patrick Gagliardini, Will Sawyer)
+>Created by Lukas Pospisil, USI Lugano, 2016 (during `PASC:HPC-Causality project` - Illia Horenko, Patrick Gagliardini, Will Sawyer)
 
 ## Installation on PIZ Daint and the first fun
 - log into ELA machine using `ssh username@ela.cscs.ch` and afterwards into PIZ Daint using `ssh daint`
@@ -18,7 +18,7 @@ Inspirated by [MINLIN](https://github.com/bcumming/minlin)
 ```
 salloc -N 4 --account=**** --partition=normal
 ```
-and afterwards, load module again and run sample using
+and afterwards, load modules again, and run sample using
 ```
 aprun -n 4 ./program
 ```
