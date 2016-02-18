@@ -1,28 +1,36 @@
 #ifndef PETSCVECTOR_H
 #define	PETSCVECTOR_H
 
-extern int DEBUG_MODE;
-extern bool PETSC_INITIALIZED;
+int DEBUG_MODE_PETSCVECTOR = true;
+bool PETSC_INITIALIZED = false;
 
-#include <iostream>
-#include <string>
+/* include petsc */
+#include "petsc.h"
+
+/* std:list for linear combinations */
 #include <list>
 
+/* basic input/output in c++ */
+#include <iostream>
+
+
+#include <string>
+
+/* to deal with errors, call Petsc functions with TRY(fun); */
 static PetscErrorCode ierr;
 #define TRY( f) {ierr = f; do {if (PetscUnlikely(ierr)) {PetscError(PETSC_COMM_SELF,__LINE__,PETSC_FUNCTION_NAME,__FILE__,ierr,PETSC_ERROR_IN_CXX,0);}} while(0);}
 
-namespace minlin {
+/* we are using namespace petscvector */
+namespace petscvector {
 
-namespace threx { // TODO: maybe choose the different namespace for my own Petsc stuff
- 
+enum petscvector_all_type { all, all_local }; /* define "all" stuff */
+
 class PetscVectorWrapperComb; /* wrapper to allow manipulation with linear combinations of vectors */
 class PetscVectorWrapperCombNode; /* one node of previous wrapper */
 class PetscVectorWrapperSub; /* wrapper to allow subvectors */
 
-/* class for manipulation with A*x as a RHS */
 template<class VectorType>
-class GeneralMatrixRHS;
-
+class GeneralMatrixRHS; /* class for manipulation with A*x as a RHS */
 
 /*! \class PetscVector
     \brief Class for manipulation with PetscVector.
@@ -68,7 +76,8 @@ class PetscVector {
 		PetscVectorWrapperSub operator()(int index) const;
 		PetscVectorWrapperSub operator()(int index_begin,int index_end) const;
 		PetscVectorWrapperSub operator()(const IS new_subvector_is) const;
-
+		PetscVectorWrapperSub operator()(petscvector_all_type all_type) const; /* define operator PetscVector(all)  */
+		
 		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector);
 
 		friend void operator*=(PetscVector &vec1, double alpha);
@@ -89,8 +98,8 @@ class PetscVector {
 			return *this;
 		}
 
-		/* define operator PetscVector(all), it is a mixture of petscvector and minlin  */
-//		PetscVectorWrapperSub operator()(minlin::detail::all_type add_in) const;
+		
+
 
 };
 
@@ -218,11 +227,10 @@ class PetscVectorWrapperSub
 
 
 
-} /* end of namespace */
-
-} /* end of MinLin namespace */
+} /* end of petsc vector namespace */
 
 
+/* add implementations */
 #include "petscvector_impl.h"
 #include "wrappercomb_impl.h"
 #include "wrappersub_impl.h"

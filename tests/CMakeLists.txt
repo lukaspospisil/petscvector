@@ -20,7 +20,7 @@ if(NOT WIN32)
 endif()
 
 # CMAKE: include cmake functions
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/util/cmake/" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../util/cmake/" ${CMAKE_MODULE_PATH})
 
 # yes, this code will be surely compiled with petsc
 message(STATUS "${Red}The code is compiled with PETSc${ColourReset}")
