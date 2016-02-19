@@ -46,7 +46,8 @@ class PetscVector {
 		PetscVector();
 		PetscVector(int n);
 		PetscVector(const PetscVector &vec1);
-		PetscVector(Vec new_inner_vector);
+		PetscVector(const Vec &new_inner_vector);
+		PetscVector(const PetscVectorWrapperComb &comb);
 		
 		~PetscVector();
 
@@ -54,6 +55,7 @@ class PetscVector {
 		void scale(double alpha);
 
 		Vec get_vector() const; // TODO: temp, direct access to inner vector should be forbidden
+
 		int size() const;
 		int local_size() const;
 
@@ -68,9 +70,8 @@ class PetscVector {
 
 		/* assignment */
 		PetscVector &operator=(const PetscVector &vec2);
-		PetscVector &operator=(PetscVectorWrapperCombNode combnode);	
-		PetscVector &operator=(PetscVectorWrapperComb comb);	
 		PetscVector &operator=(double scalar_value);	
+		PetscVector &operator=(PetscVectorWrapperComb comb);
 		
 		/* subvector */
 		PetscVectorWrapperSub operator()(int index) const;
@@ -81,7 +82,7 @@ class PetscVector {
 		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector);
 
 		friend void operator*=(PetscVector &vec1, double alpha);
-		friend void operator+=(PetscVector &vec1, const PetscVectorWrapperComb comb);
+		friend void operator+=(const PetscVector &vec1, const PetscVectorWrapperComb comb);
 		friend void operator-=(PetscVector &vec1, const PetscVectorWrapperComb comb);
 
 		friend double dot(const PetscVector &vec1, const PetscVector &vec2);
@@ -98,7 +99,7 @@ class PetscVector {
 			return *this;
 		}
 
-		
+
 
 
 };
@@ -113,14 +114,16 @@ class PetscVectorWrapperComb
 	private:
 		std::list<PetscVectorWrapperCombNode> comb_list; /* the list of linear combination nodes */
 		
-		int vector_size;
+		int vector_size; /* store the global size of the last added vector */
 		
 	public:
 		PetscVectorWrapperComb();
-		PetscVectorWrapperComb(const PetscVectorWrapperCombNode &comb_node);
 		PetscVectorWrapperComb(const PetscVector &vec);
-		PetscVectorWrapperComb(const PetscVectorWrapperSub subvector);
 		PetscVectorWrapperComb(const double &scalar_value);
+		PetscVectorWrapperComb(const PetscVectorWrapperCombNode &comb_node);
+
+		PetscVectorWrapperComb(const PetscVectorWrapperSub subvector);
+
 
 		~PetscVectorWrapperComb();
 
@@ -131,8 +134,9 @@ class PetscVectorWrapperComb
 		void append(const PetscVectorWrapperCombNode &new_node);
 		void merge(PetscVectorWrapperComb &comb);
 		void get_arrays(PetscScalar *coeffs, Vec *vectors);
+		void maxpy(const Vec &y);
 		
-		friend std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb &wrapper); // TODO: const makes a problem with the list
+		friend std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb comb);
 
 		friend const PetscVectorWrapperComb operator*(double alpha, PetscVectorWrapperComb comb);
 		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
@@ -149,13 +153,11 @@ class PetscVectorWrapperComb
 class PetscVectorWrapperCombNode
 {
 	private:
-		Vec inner_vector; /* pointer to vector in linear combination */
+		Vec inner_vector; /* pointer to vector (original Petsc Vec) in linear combination */
 		double coeff; /* coefficient in linear combination */
 	
 	public:
-		PetscVectorWrapperCombNode(); // TODO: temp
 		PetscVectorWrapperCombNode(double new_coeff, Vec new_vector);
-		PetscVectorWrapperCombNode(double scalar_value);
 	
 		void set_vector(Vec new_vector);
 		Vec get_vector() const;
@@ -165,8 +167,6 @@ class PetscVectorWrapperCombNode
 		void set_coeff(double new_coeff);
 		void scale(double alpha);
 		double get_coeff() const;
-
-		friend std::ostream &operator<<(std::ostream &output, PetscVectorWrapperCombNode &wrapper);
 
 };
 

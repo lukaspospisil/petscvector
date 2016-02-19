@@ -49,8 +49,13 @@ include_directories(${PETSCVECTOR_INCLUDE})
 
 
 # add test files
-ADD_EXECUTABLE(assign assign.cpp)
-TARGET_LINK_LIBRARIES(assign ${PETSC_LIBRARIES})
 
+#ADD_EXECUTABLE(assign assign.cpp)
+#TARGET_LINK_LIBRARIES(assign ${PETSC_LIBRARIES})
 
+#ADD_EXECUTABLE(assign2 assign2.cpp)
+#TARGET_LINK_LIBRARIES(assign2 ${PETSC_LIBRARIES})
+
+ADD_EXECUTABLE(binary binary.cpp)
+TARGET_LINK_LIBRARIES(binary ${PETSC_LIBRARIES})
 

@@ -5,11 +5,6 @@ namespace petscvector {
 
 /* --------------------- PetscVectorWrapperComb ----------------------*/
 
-/* default constructor */
-PetscVectorWrapperComb::PetscVectorWrapperComb(){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: empty" << std::endl;
-}
-
 /* constructor from node */
 PetscVectorWrapperComb::PetscVectorWrapperComb(const PetscVectorWrapperCombNode &comb_node){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: WrapperComb" << std::endl;
@@ -20,7 +15,7 @@ PetscVectorWrapperComb::PetscVectorWrapperComb(const PetscVectorWrapperCombNode 
 
 /* constructor from vec */
 PetscVectorWrapperComb::PetscVectorWrapperComb(const PetscVector &vec){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: PetscVector" << std::endl;
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: from given PetscVector" << std::endl;
 
 	/* create node from vector */
 	PetscVectorWrapperCombNode comb_node(1.0,vec.get_vector());
@@ -34,10 +29,10 @@ PetscVectorWrapperComb::PetscVectorWrapperComb(const double &scalar_value){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: double" << std::endl;
 
 	/* create node from scalar_value = create vector of size 1 */
-	PetscVectorWrapperCombNode comb_node(scalar_value);
+//	PetscVectorWrapperCombNode comb_node(scalar_value); // TODO: write this constructor
 
 	/* append it to newly created combination */
-	this->append(comb_node);
+//	this->append(comb_node);
 }
 
 /* constructor from subvector */
@@ -121,12 +116,37 @@ void PetscVectorWrapperComb::get_arrays(PetscScalar *coeffs, Vec *vectors){
 
 }
 
+/* perform maxpy and store it into given Vec (allocated) */
+void PetscVectorWrapperComb::maxpy(const Vec &y){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)FUNCTION: maxpy(Vec)" << std::endl;
+
+	int list_size = get_listsize();
+	PetscScalar *alphas;
+	Vec *vectors;
+
+	/* allocate memory */
+	TRY(PetscMalloc(sizeof(PetscScalar)*list_size,&alphas));
+	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
+
+	/* get array with coefficients and vectors */
+	get_arrays(alphas,vectors);
+
+	/* vec1 = vec1 + sum (coeff*vector) */
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - perform MAXPY" << std::endl;
+
+	TRY( VecMAXPY(y,list_size,alphas,vectors) );
+
+	/* free memory */
+	TRY(PetscFree(alphas));
+	TRY(PetscFree(vectors));
+
+}
 
 
 /* print linear combination without instance, f.x << alpha*vec1 + beta*vec2 */
-std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb &wrapper)
+std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb comb)
 {
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)OPERATOR: << wrapper" << std::endl;
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)OPERATOR: << comb" << std::endl;
 		
 	PetscInt i,j,vector_size,list_size;
 	double value;
@@ -135,12 +155,12 @@ std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb &wrapper)
 		
 	output << "[";
 	
-	list_size = wrapper.get_listsize();
-	vector_size = wrapper.get_vectorsize();
+	list_size = comb.get_listsize();
+	vector_size = comb.get_vectorsize();
 	
 	/* go through components in the vector */
 	for(i=0;i<vector_size;i++){
-		list_iter = wrapper.comb_list.begin();
+		list_iter = comb.comb_list.begin();
 		
 		/* for each component go throught the list */
 		for(j=0;j<list_size;j++){
@@ -226,26 +246,10 @@ const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVector
 
 /* --------------------- PetscVectorWrapperCombNode ----------------------*/
 
-/* default constructor */ //TODO: temp, it is not possible to create node without any vector and scalar
-PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(){
-}
-
 /* constructor from vector and coefficient */
 PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double new_coeff, Vec new_vector){
 	set_vector(new_vector);
 	set_coeff(new_coeff);
-}
-
-/* create vector from scalar value - to be able to vec(idx) = vec2(idx) + scalar_value */
-PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double scalar_value){
-	/* create sequential petsc vector of size 1 */
-	VecCreateSeq(PETSC_COMM_SELF,1,&(this->inner_vector));
-	VecSet(inner_vector,scalar_value);
-
-	VecAssemblyBegin(inner_vector); // TODO: has to be called?
-	VecAssemblyEnd(inner_vector);
-
-	set_coeff(1.0);
 }
 
 /* set vector to the node */
@@ -291,28 +295,6 @@ int PetscVectorWrapperCombNode::get_value(int index) const{
 			
 	return y[0];
 }
-
-/* stream insertion << operator */
-std::ostream &operator<<(std::ostream &output, PetscVectorWrapperCombNode &wrapper)
-{
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)OPERATOR: << wrapper" << std::endl;
-	
-	PetscScalar *arr_vector;
-	PetscInt i,local_size;
-	
-	output << "[";
-	TRY( VecGetLocalSize(wrapper.inner_vector,&local_size) );
-	TRY( VecGetArray(wrapper.inner_vector,&arr_vector) );
-	for (i=0; i<local_size; i++){
-		output << wrapper.coeff << "*" << arr_vector[i];
-		if(i < local_size-1) output << ", ";
-	}
-	TRY( VecRestoreArray(wrapper.inner_vector,&arr_vector) );
-	output << "]";
-			
-	return output;
-}
-
 
 
 } /* end of petscvector namespace */
