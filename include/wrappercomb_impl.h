@@ -18,21 +18,10 @@ PetscVectorWrapperComb::PetscVectorWrapperComb(const PetscVector &vec){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: from given PetscVector" << std::endl;
 
 	/* create node from vector */
-	PetscVectorWrapperCombNode comb_node(1.0,vec.get_vector());
+	PetscVectorWrapperCombNode comb_node(vec);
 
 	/* append new node to newly created combination */
 	this->append(comb_node);
-}
-
-/* constructor from scalar_value - create Node from value */
-PetscVectorWrapperComb::PetscVectorWrapperComb(const double &scalar_value){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)CONSTRUCTOR: double" << std::endl;
-
-	/* create node from scalar_value = create vector of size 1 */
-//	PetscVectorWrapperCombNode comb_node(scalar_value); // TODO: write this constructor
-
-	/* append it to newly created combination */
-//	this->append(comb_node);
 }
 
 /* constructor from subvector */
@@ -66,7 +55,7 @@ void PetscVectorWrapperComb::append(const PetscVectorWrapperCombNode &new_node){
 }
 
 /* append new list to the end of old list (merge without sort), will be called from overloaded operator+ */
-void PetscVectorWrapperComb::merge(PetscVectorWrapperComb &comb){
+void PetscVectorWrapperComb::merge(const PetscVectorWrapperComb &comb){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)FUNCTION: merge(WrapperComb)" << std::endl;
 
 	comb_list.insert(comb_list.end(), comb.comb_list.begin(), comb.comb_list.end());
@@ -239,6 +228,27 @@ const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVector
 	return comb1;
 }
 
+/* new linear combination created by comb + scalar */
+const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, double scalar){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)OPERATOR: comb + scalar" << std::endl;
+
+	/* duplicate vector from comb */
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - create new vector of ones" << std::endl;
+	Vec temp_vec;
+	TRY( VecDuplicate(comb1.get_first_vector(), &temp_vec) );
+	TRY( VecSet(temp_vec,scalar));
+	
+	/* prepare node, tell him to destroy the Vec at the end of the fun */
+	PetscVectorWrapperCombNode temp_node(1.0,temp_vec,true);
+	
+	/* prepare new combination from node */
+	PetscVectorWrapperComb comb2(temp_node);
+	
+	/* append second linear combination to the first */
+	comb1.merge(comb2);
+	
+	return comb1;
+}
 
 
 
@@ -246,39 +256,92 @@ const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVector
 
 /* --------------------- PetscVectorWrapperCombNode ----------------------*/
 
+/* constructor default */
+PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)CONSTRUCTOR: default" << std::endl;
+
+}
+
+/* constructor from PetscVector */
+PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(const PetscVector &vec){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)CONSTRUCTOR: (Vec)" << std::endl;
+	set_vector(vec.get_vector());
+	set_coeff(1.0);
+	
+	free_vec = false;
+}
+
 /* constructor from vector and coefficient */
 PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double new_coeff, Vec new_vector){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)CONSTRUCTOR: (double,Vec)" << std::endl;
 	set_vector(new_vector);
 	set_coeff(new_coeff);
+	
+	free_vec = false;
+}
+
+/* constructor from vector, coefficient, and free_vec */
+PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double new_coeff, Vec new_vector, bool new_free_vec){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)CONSTRUCTOR: (double,Vec,bool)" << std::endl;
+
+	set_vector(new_vector);
+	set_coeff(new_coeff);
+
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "-------------- VEC CreAte in node -----------------" << std::endl;
+	
+	free_vec = new_free_vec;
+}
+
+/* destructor */
+PetscVectorWrapperCombNode::~PetscVectorWrapperCombNode(){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)DESTRUCTOR" << std::endl;
+
+	if(free_vec){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "-------------- VEC DEStROY in node -----------------" << free_vec << std::endl;
+		
+		TRY( VecDestroy(&inner_vector) );
+	}
 }
 
 /* set vector to the node */
 void PetscVectorWrapperCombNode::set_vector(Vec new_vector){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: set_vector(Vec)" << std::endl;
+
 	this->inner_vector = new_vector;
 }
 
 /* return vector from this node */
 Vec PetscVectorWrapperCombNode::get_vector() const{
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: get_vector()" << std::endl;
+
 	return this->inner_vector;
 }
 
 /* set new coefficient to this node */
 void PetscVectorWrapperCombNode::set_coeff(double new_coeff){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: set_coeff(double)" << std::endl;
+
 	this->coeff = new_coeff;
 }
 
 /* node is multiplied by scalar, now multiply only the coefficient of linear combination */
 void PetscVectorWrapperCombNode::scale(double alpha){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: scale(double)" << std::endl;
+
 	this->coeff *= alpha;
 }
 
 /* get the coefficient from this node */
 double PetscVectorWrapperCombNode::get_coeff() const{
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: get_coeff()" << std::endl;
+
 	return this->coeff;
 }
 
 /* get size of the vector */
 int PetscVectorWrapperCombNode::get_size() const{
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: get_size()" << std::endl;
+
 	int global_size;
 	TRY( VecGetSize(this->inner_vector,&global_size) );
 	return global_size;
@@ -286,6 +349,8 @@ int PetscVectorWrapperCombNode::get_size() const{
 
 /* get value from the vector, really slow */
 int PetscVectorWrapperCombNode::get_value(int index) const{
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: get_value(int)" << std::endl;
+
 	PetscInt ni = 1;
 	PetscInt ix[1];
 	PetscScalar y[1];
@@ -295,6 +360,8 @@ int PetscVectorWrapperCombNode::get_value(int index) const{
 			
 	return y[0];
 }
+
+
 
 
 } /* end of petscvector namespace */

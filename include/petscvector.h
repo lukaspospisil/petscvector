@@ -23,14 +23,20 @@ static PetscErrorCode ierr;
 /* we are using namespace petscvector */
 namespace petscvector {
 
-enum petscvector_all_type { all, all_local }; /* define "all" stuff */
+/* define "all" stuff */
+enum petscvector_all_type { all, all_local }; 
 
-class PetscVectorWrapperComb; /* wrapper to allow manipulation with linear combinations of vectors */
-class PetscVectorWrapperCombNode; /* one node of previous wrapper */
-class PetscVectorWrapperSub; /* wrapper to allow subvectors */
+/* wrapper to allow manipulation with linear combinations of vectors */
+class PetscVectorWrapperComb;
 
-template<class VectorType>
-class GeneralMatrixRHS; /* class for manipulation with A*x as a RHS */
+/* one node of previous wrapper */
+class PetscVectorWrapperCombNode;
+
+/* wrapper to allow subvectors */
+class PetscVectorWrapperSub; 
+
+/* class for manipulation with A*x as a RHS */
+template<class VectorType> class GeneralMatrixRHS; 
 
 /*! \class PetscVector
     \brief Class for manipulation with PetscVector.
@@ -43,6 +49,7 @@ class PetscVector {
 		
 	public:
 
+		/* constructors & destructor */
 		PetscVector();
 		PetscVector(int n);
 		PetscVector(const PetscVector &vec1);
@@ -51,6 +58,7 @@ class PetscVector {
 		
 		~PetscVector();
 
+		/* general methods */
 		void valuesUpdate() const;
 		void scale(double alpha);
 
@@ -70,37 +78,37 @@ class PetscVector {
 
 		/* assignment */
 		PetscVector &operator=(const PetscVector &vec2);
-		PetscVector &operator=(double scalar_value);	
+		PetscVector &operator=(double scalar_value);
 		PetscVector &operator=(PetscVectorWrapperComb comb);
-		
-		/* subvector */
-		PetscVectorWrapperSub operator()(int index) const;
-		PetscVectorWrapperSub operator()(int index_begin,int index_end) const;
-		PetscVectorWrapperSub operator()(const IS new_subvector_is) const;
-		PetscVectorWrapperSub operator()(petscvector_all_type all_type) const; /* define operator PetscVector(all)  */
-		
-		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector);
 
 		friend void operator*=(PetscVector &vec1, double alpha);
 		friend void operator+=(const PetscVector &vec1, const PetscVectorWrapperComb comb);
 		friend void operator-=(PetscVector &vec1, const PetscVectorWrapperComb comb);
 
+		/* subvector */
+		PetscVectorWrapperSub operator()(int index) const;
+		PetscVectorWrapperSub operator()(int index_begin,int index_end) const;
+		PetscVectorWrapperSub operator()(const IS new_subvector_is) const;
+		PetscVectorWrapperSub operator()(petscvector_all_type all_type) const; /* define operator PetscVector(all)  */
+
+		/* print */
+		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector);
+
+		/* binary operations */
 		friend double dot(const PetscVector &vec1, const PetscVector &vec2);
 		friend double max(const PetscVector &vec1);
 		friend double sum(const PetscVector &vec1);
 		friend double norm(const PetscVector &vec1);
+
+		/* other operations */
 		friend const PetscVector operator/(const PetscVector &vec1, const PetscVector &vec2);
 
-		
 		/* y = A*x, where A*x is created as RHS */
 		template<class VectorType>
 		VectorType &operator=(GeneralMatrixRHS<VectorType> rhs){
 			rhs.matmult(*this);
 			return *this;
 		}
-
-
-
 
 };
 
@@ -117,31 +125,32 @@ class PetscVectorWrapperComb
 		int vector_size; /* store the global size of the last added vector */
 		
 	public:
+		/* constructors and destructor */
 		PetscVectorWrapperComb();
 		PetscVectorWrapperComb(const PetscVector &vec);
-		PetscVectorWrapperComb(const double &scalar_value);
 		PetscVectorWrapperComb(const PetscVectorWrapperCombNode &comb_node);
-
-		PetscVectorWrapperComb(const PetscVectorWrapperSub subvector);
-
+		PetscVectorWrapperComb(PetscVectorWrapperSub subvector);
 
 		~PetscVectorWrapperComb();
 
-
+		/* general functions */
 		int get_listsize() const;
 		int get_vectorsize() const;
 		Vec get_first_vector();
 		void append(const PetscVectorWrapperCombNode &new_node);
-		void merge(PetscVectorWrapperComb &comb);
+		void merge(const PetscVectorWrapperComb &comb);
 		void get_arrays(PetscScalar *coeffs, Vec *vectors);
 		void maxpy(const Vec &y);
 		
+		/* print */
 		friend std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb comb);
 
+		/* operations with combinations */
 		friend const PetscVectorWrapperComb operator*(double alpha, PetscVectorWrapperComb comb);
 		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
 		friend const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
 
+		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, double scalar);
 		
 };
 
@@ -155,10 +164,20 @@ class PetscVectorWrapperCombNode
 	private:
 		Vec inner_vector; /* pointer to vector (original Petsc Vec) in linear combination */
 		double coeff; /* coefficient in linear combination */
+
+		bool free_vec; /* free vector in destructor */
 	
 	public:
+		/* constructors and destructor */
+		PetscVectorWrapperCombNode();
+		PetscVectorWrapperCombNode(const PetscVector &vec);
 		PetscVectorWrapperCombNode(double new_coeff, Vec new_vector);
-	
+		PetscVectorWrapperCombNode(double new_coeff, Vec new_vector, bool );
+
+		~PetscVectorWrapperCombNode();
+
+
+		/* general functions */
 		void set_vector(Vec new_vector);
 		Vec get_vector() const;
 		int get_size() const;
@@ -168,11 +187,14 @@ class PetscVectorWrapperCombNode
 		void scale(double alpha);
 		double get_coeff() const;
 
+
+
 };
 
 /*! \class PetscVectorWrapperSub
     \brief Wrapper with subvectors.
 
+	For manipulation with subvectors. Based on Petsc function GetSubvector (in constructor) and RestoreSubVector (in destructor).
 */
 class PetscVectorWrapperSub
 {
@@ -196,28 +218,27 @@ class PetscVectorWrapperSub
 
 		double get(int index);
 
+		/* print */
 		friend std::ostream &operator<<(std::ostream &output, const PetscVectorWrapperSub &wrapper);				
 
+		/* assignment operator */
 		PetscVectorWrapperSub &operator=(PetscVectorWrapperSub subvec); /* subvec = subvec */
 		PetscVectorWrapperSub &operator=(double scalar_value);	 /* subvec = const */
 		PetscVectorWrapperSub &operator=(const PetscVector &vec2); /* subvec = vec */
 		PetscVectorWrapperSub &operator=(const PetscVectorWrapperComb &comb);	
-
-
-//		PetscVectorWrapperSub &operator=(const PetscVectorWrapperCombNode combnode);	
-
-
 
 		friend void operator*=(const PetscVectorWrapperSub &subvec1, double alpha); /* subvec = alpha*subvec */
 		friend void operator+=(const PetscVectorWrapperSub &subvec1, const PetscVectorWrapperComb comb);
 		friend void operator-=(const PetscVectorWrapperSub &subvec1, const PetscVectorWrapperComb comb);
 		friend void operator/=(const PetscVectorWrapperSub &subvec1, const PetscVectorWrapperSub subvec2);
 
+		/* boolean operations */
 		friend bool operator==(PetscVectorWrapperSub subvec1, double alpha);
 		friend bool operator==(PetscVectorWrapperSub subvec1, PetscVectorWrapperSub subvec2);
 
 		friend bool operator>(PetscVectorWrapperSub vec1, PetscVectorWrapperSub vec2);
 
+		/* binary operations */
 		friend double sum(const PetscVectorWrapperSub subvec1);
 		friend double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subvec2);
 

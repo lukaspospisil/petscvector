@@ -41,11 +41,14 @@ int main( int argc, char *argv[] )
     
     std::cout << D << std::endl;
 
-	E = 2*H + D;
+DEBUG_MODE_PETSCVECTOR = 100;
+	E = H + D;
+//	PetscVectorWrapperCombNode aa = H;
+DEBUG_MODE_PETSCVECTOR = 0;
 
 	std::cout << E << std::endl;
 
-	std::cout << 2*H+D << std::endl;
+//	std::cout << 2*H+D << std::endl;
 
 
 	PETSC_INITIALIZED = false;
