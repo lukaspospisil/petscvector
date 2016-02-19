@@ -165,14 +165,12 @@ class PetscVectorWrapperCombNode
 		Vec inner_vector; /* pointer to vector (original Petsc Vec) in linear combination */
 		double coeff; /* coefficient in linear combination */
 
-		bool free_vec; /* free vector in destructor */
-	
 	public:
 		/* constructors and destructor */
 		PetscVectorWrapperCombNode();
 		PetscVectorWrapperCombNode(const PetscVector &vec);
 		PetscVectorWrapperCombNode(double new_coeff, Vec new_vector);
-		PetscVectorWrapperCombNode(double new_coeff, Vec new_vector, bool );
+		PetscVectorWrapperCombNode(double new_coeff );
 
 		~PetscVectorWrapperCombNode();
 

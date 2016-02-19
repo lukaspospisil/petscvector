@@ -233,19 +233,19 @@ const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, double scal
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)OPERATOR: comb + scalar" << std::endl;
 
 	/* duplicate vector from comb */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - create new vector of ones" << std::endl;
-	Vec temp_vec;
-	TRY( VecDuplicate(comb1.get_first_vector(), &temp_vec) );
-	TRY( VecSet(temp_vec,scalar));
+//	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - create new vector of ones" << std::endl;
+//	Vec temp_vec;
+//	TRY( VecDuplicate(comb1.get_first_vector(), &temp_vec) );
+//	TRY( VecSet(temp_vec,scalar));
 	
 	/* prepare node, tell him to destroy the Vec at the end of the fun */
-	PetscVectorWrapperCombNode temp_node(1.0,temp_vec,true);
+//	PetscVectorWrapperCombNode temp_node(1.0,temp_vec,false);
 	
 	/* prepare new combination from node */
-	PetscVectorWrapperComb comb2(temp_node);
+//	PetscVectorWrapperComb comb2(temp_node);
 	
 	/* append second linear combination to the first */
-	comb1.merge(comb2);
+//	comb1.merge(comb2);
 	
 	return comb1;
 }
@@ -268,7 +268,6 @@ PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(const PetscVector &vec){
 	set_vector(vec.get_vector());
 	set_coeff(1.0);
 	
-	free_vec = false;
 }
 
 /* constructor from vector and coefficient */
@@ -277,30 +276,21 @@ PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double new_coeff, Vec new
 	set_vector(new_vector);
 	set_coeff(new_coeff);
 	
-	free_vec = false;
 }
 
-/* constructor from vector, coefficient, and free_vec */
-PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double new_coeff, Vec new_vector, bool new_free_vec){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)CONSTRUCTOR: (double,Vec,bool)" << std::endl;
+/* constructor coefficient */
+PetscVectorWrapperCombNode::PetscVectorWrapperCombNode(double new_coeff){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)CONSTRUCTOR: (double)" << std::endl;
 
-	set_vector(new_vector);
+	set_vector(NULL);
 	set_coeff(new_coeff);
 
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "-------------- VEC CreAte in node -----------------" << std::endl;
-	
-	free_vec = new_free_vec;
 }
 
 /* destructor */
 PetscVectorWrapperCombNode::~PetscVectorWrapperCombNode(){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)DESTRUCTOR" << std::endl;
 
-	if(free_vec){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "-------------- VEC DEStROY in node -----------------" << free_vec << std::endl;
-		
-		TRY( VecDestroy(&inner_vector) );
-	}
 }
 
 /* set vector to the node */
