@@ -1,9 +1,6 @@
 #ifndef PETSCVECTOR_H
 #define	PETSCVECTOR_H
 
-int DEBUG_MODE_PETSCVECTOR = true;
-bool PETSC_INITIALIZED = false;
-
 /* include petsc */
 #include "petsc.h"
 
@@ -22,6 +19,9 @@ static PetscErrorCode ierr;
 
 /* we are using namespace petscvector */
 namespace petscvector {
+
+int DEBUG_MODE_PETSCVECTOR = true;
+bool PETSC_INITIALIZED = false;
 
 /* define "all" stuff */
 enum petscvector_all_type { all, all_local }; 
