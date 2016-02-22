@@ -223,7 +223,7 @@ class PetscVectorWrapperSub
 		PetscVectorWrapperSub &operator=(PetscVectorWrapperSub subvec); /* subvec = subvec */
 		PetscVectorWrapperSub &operator=(double scalar_value);	 /* subvec = const */
 		PetscVectorWrapperSub &operator=(const PetscVector &vec2); /* subvec = vec */
-		PetscVectorWrapperSub &operator=(const PetscVectorWrapperComb &comb);	
+		PetscVectorWrapperSub &operator=(PetscVectorWrapperComb comb);	
 
 		friend void operator*=(const PetscVectorWrapperSub &subvec1, double alpha); /* subvec = alpha*subvec */
 		friend void operator+=(const PetscVectorWrapperSub &subvec1, const PetscVectorWrapperComb comb);
