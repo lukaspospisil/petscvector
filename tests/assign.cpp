@@ -29,25 +29,22 @@ int main( int argc, char *argv[] )
     H(3) = 8;  D(3) = 1;
     H(4) = 2;  D(4) = 8;
 
-    std::cout << H << std::endl;
-    
-    std::cout << D << std::endl;
-    
-    D = H;
-    
-    std::cout << D << std::endl;
+    std::cout << "H:" << H << std::endl;
+    std::cout << "D:" << D << std::endl;
 
-    D(all) = 1;
-    
-    std::cout << D << std::endl;
+	E = D;
+	E = 1;
 
-DEBUG_MODE_PETSCVECTOR = 100;
-//	E = H + 1;
+    std::cout << "E:" << E << std::endl;
+
+	std::cout << 1 + 3*E - D << std::endl;
+	std::cout << 3*E + 1 - D << std::endl;
+
+DEBUG_MODE_PETSCVECTOR = 99;
+	E += 0.5 + 2*E - D + 0.5;
 DEBUG_MODE_PETSCVECTOR = 0;
 
-//	std::cout << E << std::endl;
-
-	std::cout << H + 1 << std::endl;
+	std::cout << E << std::endl;
 
 
 	PETSC_INITIALIZED = false;

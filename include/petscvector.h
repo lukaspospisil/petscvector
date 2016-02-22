@@ -139,8 +139,7 @@ class PetscVectorWrapperComb
 		Vec get_first_vector();
 		void append(const PetscVectorWrapperCombNode &new_node);
 		void merge(const PetscVectorWrapperComb &comb);
-		void get_arrays(PetscScalar *coeffs, Vec *vectors);
-		void maxpy(const Vec &y);
+		void compute(const Vec &y, double init_scale);
 		
 		/* print */
 		friend std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb comb);
@@ -151,6 +150,7 @@ class PetscVectorWrapperComb
 		friend const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
 
 		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, double scalar);
+		friend const PetscVectorWrapperComb operator+(double scalar,PetscVectorWrapperComb comb2);
 		
 };
 

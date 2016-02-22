@@ -260,12 +260,8 @@ PetscVector &PetscVector::operator=(PetscVectorWrapperComb comb){
 		TRY( VecDuplicate(comb.get_first_vector(),&inner_vector) );
 	}
 
-	/* vec1 = 0, we will perform MAXPY (y += lin_comb) */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - set vector LHS = 0" << std::endl;		
-	TRY( VecSet(inner_vector,0.0) );
-
-	/* vec += comb */
-	comb.maxpy(inner_vector);
+	/* vec = comb */
+	comb.compute(inner_vector,0.0);
 
 	return *this;	
 }
@@ -345,7 +341,7 @@ void operator+=(const PetscVector &vec1, PetscVectorWrapperComb comb)
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)OPERATOR: vec += comb" << std::endl;
 	
 	/* vec1.inner_vector should be allocated */
-	comb.maxpy(vec1.inner_vector);
+	comb.compute(vec1.inner_vector,1.0);
 }
 
 /* vec1 -= comb */

@@ -228,12 +228,12 @@ void operator+=(const PetscVectorWrapperSub &subvec, PetscVectorWrapperComb comb
 	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
 
 	/* get array with coefficients and vectors */
-	comb.get_arrays(alphas,vectors);
+//	comb.get_arrays(alphas,vectors);
 
 	/* vec1 = vec1 + sum (coeff*vector) */
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - perform MAXPY" << std::endl;
-	VecMAXPY(subvec.subvector,list_size,alphas,vectors);
-	subvec.valuesUpdate();
+//	VecMAXPY(subvec.subvector,list_size,alphas,vectors);
+//	subvec.valuesUpdate();
 
 	/* free memory */
 	TRY(PetscFree(alphas));

@@ -83,19 +83,56 @@ Vec PetscVectorWrapperComb::get_first_vector() {
 	return vector;
 }
 
-/* prepare arrays from linear combination list, I assume that arrays are allocated */
-void PetscVectorWrapperComb::get_arrays(PetscScalar *coeffs, Vec *vectors){
+/* perform scale, maxpy and addscalar and store it into given Vec (allocated) */
+void PetscVectorWrapperComb::compute(const Vec &y, double init_scale){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)FUNCTION: process(Vec,double)" << std::endl;
+
+	int list_size = get_listsize();
+	PetscScalar *alphas;
+	Vec *vectors;
+	double scale = init_scale; /* = 0.0 if y=comb, = 1.0 if y+=comb */
+	double shift = 0.0;
+	int maxpy_length = 0;
+
+	/* go throught the list:
+	 * - if same vector => scale += coeff
+	 * - if scalar (NULL Vec) => shift += coeff
+	 * - otherwise prepare to array to maxpy
+	 * 
+	 * afterwards
+	 * y = scale*y (VecScale)
+	 * y = y + shift (VecShift)
+	 * y += alphas*vectors (VecMAXPY)
+	 */ 
+
+	/* allocate memory */
+	TRY(PetscMalloc(sizeof(PetscScalar)*list_size,&alphas));
+	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
+
+	/* get array with coefficients and vectors */
 	std::list<PetscVectorWrapperCombNode>::iterator list_iter; /* iterator through list */
-	int list_size = this->get_listsize();
 	int j;
 
-	/* set to the begin of the list */
+	/* set iterator to the begin of the list */
 	list_iter = comb_list.begin();
 
 	/* go through the list and fill the vectors */
 	for(j=0;j<list_size;j++){
-		coeffs[j] = list_iter->get_coeff();
-		vectors[j] = list_iter->get_vector();
+		/* if Vec==NULL, then add to the shift */
+		if(list_iter->get_vector() == NULL){
+			shift += list_iter->get_coeff();
+		} else {
+			/* if same vector => scale += coeff */
+			if(list_iter->get_vector() == y){
+				scale+=list_iter->get_coeff();
+			} else {
+				/* otherwise prepare to maxpy-arrays */
+				alphas[maxpy_length] = list_iter->get_coeff();
+				vectors[maxpy_length] = list_iter->get_vector();
+
+				maxpy_length += 1;
+			} 
+		}
 		
 		if(j < list_size-1){
 			/* this is not the last element */
@@ -103,27 +140,33 @@ void PetscVectorWrapperComb::get_arrays(PetscScalar *coeffs, Vec *vectors){
 		}
 	}
 
-}
+	/* print info about performed stuff */
+	if(DEBUG_MODE_PETSCVECTOR >= 99){
+		std::cout << " - linear combination:" << std::endl;
+		std::cout << "  - scale: " << scale << std::endl;
+		std::cout << "  - shift: " << shift << std::endl;
+		std::cout << "  - maxpy: " << maxpy_length << std::endl;
+	}
 
-/* perform maxpy and store it into given Vec (allocated) */
-void PetscVectorWrapperComb::maxpy(const Vec &y){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)FUNCTION: maxpy(Vec)" << std::endl;
+	/* there will be maxy y+=..., it is necessary to change scale coeff */
+//	if(maxpy_length > 0){
+//		scale += -1.0;
+//	}
 
-	int list_size = get_listsize();
-	PetscScalar *alphas;
-	Vec *vectors;
+	/* scale the vector */
+	if(scale != 1.0){
+		TRY( VecScale(y, scale) );
+	}
 
-	/* allocate memory */
-	TRY(PetscMalloc(sizeof(PetscScalar)*list_size,&alphas));
-	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
+	/* shift by scalar value */
+	if(shift != 0.0){
+		TRY( VecShift(y, shift) );
+	}
 
-	/* get array with coefficients and vectors */
-	get_arrays(alphas,vectors);
-
-	/* vec1 = vec1 + sum (coeff*vector) */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - perform MAXPY" << std::endl;
-
-	TRY( VecMAXPY(y,list_size,alphas,vectors) );
+	/* y += sum (alphas*vectors) */
+	if(maxpy_length > 0){
+		TRY( VecMAXPY(y,maxpy_length,alphas,vectors) );
+	}
 
 	/* free memory */
 	TRY(PetscFree(alphas));
@@ -160,14 +203,17 @@ std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb comb)
 				output << list_iter->get_coeff(); 
 			}
 
-			output << "*";
 
-			/* print value, if value < 0, then print it in () */
-			value = list_iter->get_value(i);
-			if(value < 0.0){
-				output << "(" << value << ")";
-			} else {
-				output << value; 
+			/* maybe the vector = NULL, i.e. when comb+scalar is called */
+			if(list_iter->get_size() > 0){
+				output << "*";
+				/* print value, if value < 0, then print it in () */
+				value = list_iter->get_value(i);
+				if(value < 0.0){
+					output << "(" << value << ")";
+				} else {
+					output << value; 
+				}
 			}
 
 			if(j < list_size-1){ 
@@ -232,25 +278,24 @@ const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVector
 const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, double scalar){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)OPERATOR: comb + scalar" << std::endl;
 
-	/* duplicate vector from comb */
-//	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - create new vector of ones" << std::endl;
-//	Vec temp_vec;
-//	TRY( VecDuplicate(comb1.get_first_vector(), &temp_vec) );
-//	TRY( VecSet(temp_vec,scalar));
-	
 	/* prepare node, tell him to destroy the Vec at the end of the fun */
-//	PetscVectorWrapperCombNode temp_node(1.0,temp_vec,false);
+	PetscVectorWrapperCombNode temp_node(scalar);
 	
 	/* prepare new combination from node */
-//	PetscVectorWrapperComb comb2(temp_node);
+	PetscVectorWrapperComb comb2(temp_node);
 	
 	/* append second linear combination to the first */
-//	comb1.merge(comb2);
+	comb1.merge(comb2);
 	
 	return comb1;
 }
 
+/* new linear combination created by scalar+comb */
+const PetscVectorWrapperComb operator+(double scalar,PetscVectorWrapperComb comb2){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperComb)OPERATOR: scalar + comb" << std::endl;
 
+	return comb2+scalar;
+}
 
 
 
@@ -333,7 +378,11 @@ int PetscVectorWrapperCombNode::get_size() const{
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperCombNode)FUNCTION: get_size()" << std::endl;
 
 	int global_size;
-	TRY( VecGetSize(this->inner_vector,&global_size) );
+	if(this->inner_vector){
+		TRY( VecGetSize(this->inner_vector,&global_size) );
+	} else {
+		global_size = 0;
+	}
 	return global_size;
 }
 
