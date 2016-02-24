@@ -24,7 +24,8 @@ int DEBUG_MODE_PETSCVECTOR = true;
 bool PETSC_INITIALIZED = false;
 
 /* define "all" stuff */
-enum petscvector_all_type { all, all_local }; 
+class petscvector_all_type {} all; 
+
 
 /* wrapper to allow manipulation with linear combinations of vectors */
 class PetscVectorWrapperComb;
