@@ -86,6 +86,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a4ca203b54bbdc144cc0443d8ad4bbbe1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update values in inner vector.  <a href="#a4ca203b54bbdc144cc0443d8ad4bbbe1">More...</a><br /></td></tr>
 <tr class="separator:a4ca203b54bbdc144cc0443d8ad4bbbe1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af3758fbc65f917ef42af6682929acf93"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#af3758fbc65f917ef42af6682929acf93">scale</a> (double alpha)</td></tr>
+<tr class="memdesc:af3758fbc65f917ef42af6682929acf93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scale all values in inner vector.  <a href="#af3758fbc65f917ef42af6682929acf93">More...</a><br /></td></tr>
 <tr class="separator:af3758fbc65f917ef42af6682929acf93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ff92bf63ecdabfbed562732688109e9"><td class="memItemLeft" align="right" valign="top">Vec&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a1ff92bf63ecdabfbed562732688109e9">get_vector</a> () const </td></tr>
 <tr class="memdesc:a1ff92bf63ecdabfbed562732688109e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get inner vector.  <a href="#a1ff92bf63ecdabfbed562732688109e9">More...</a><br /></td></tr>
@@ -315,7 +316,7 @@ Friends</h2></td></tr>
 <p>Get single value. </p>
 <p>Return single value with given index of component.</p>
 <dl class="section note"><dt>Note</dt><dd>works only with local id, really slow </dd></dl>
-<dl class="section return"><dt>Returns</dt><dd>int global size of inner vector </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>global size of inner vector </dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
@@ -398,7 +399,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Get inner vector. </p>
-<dl class="section return"><dt>Returns</dt><dd>Vec original inner vector </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>original inner vector </dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>this function is temporary </dd></dl>
 
 </div>
@@ -417,7 +418,7 @@ Friends</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Get local size of inner vector. </p>
-<dl class="section return"><dt>Returns</dt><dd>int local size of inner vector </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>local size of inner vector </dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
@@ -611,6 +612,15 @@ template&lt;class VectorType &gt; </div>
       </table>
 </div><div class="memdoc">
 
+<p>Scale all values in inner vector. </p>
+<p>Call VecScale.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">alpha</td><td>the scaling coeficient </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a class="anchor" id="a5f57041711f7a1f1db2fd5cbe06ae2c8"></a>
@@ -690,7 +700,7 @@ template&lt;class VectorType &gt; </div>
 </div><div class="memdoc">
 
 <p>Get size of inner vector. </p>
-<dl class="section return"><dt>Returns</dt><dd>int global size of inner vector </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>global size of inner vector </dd></dl>
 <dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
@@ -1018,7 +1028,7 @@ template&lt;class VectorType &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Mar 4 2016 00:16:41 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Mar 4 2016 00:19:18 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
