@@ -1,3 +1,13 @@
+/** @file petscvector.h
+ *  @brief Header file with class delarations.
+ *
+ *  This defines the basic layout of all used classes. In the end of the file,
+ *  the files with specific implementations are included.
+ *
+ *  @author Lukas Pospisil
+ *  @bug No known bugs.
+ */
+
 #ifndef PETSCVECTOR_H
 #define	PETSCVECTOR_H
 
@@ -40,9 +50,9 @@ class PetscVectorWrapperSub;
 template<class VectorType> class GeneralMatrixRHS; 
 
 /*! \class PetscVector
-    \brief Class for manipulation with PetscVector.
+    \brief General class for manipulation with vectors.
 
-    Here will be a detailed description.
+    
 */
 class PetscVector {
 	private:
@@ -50,13 +60,11 @@ class PetscVector {
 		
 	public:
 
-		/* constructors & destructor */
 		PetscVector();
 		PetscVector(int n);
 		PetscVector(const PetscVector &vec1);
 		PetscVector(const Vec &new_inner_vector);
 		PetscVector(const PetscVectorWrapperComb &comb);
-		
 		~PetscVector();
 
 		/* general methods */

@@ -4,13 +4,11 @@
 
 namespace petscvector {
 
- 
-/*! \fn PetscVector
-    \brief Default constructor.
-    
-    No inner Vec allocated (=NULL). This could be performed during the first use.
-    
-*/
+/** @brief The basic constructor.
+ * 
+ *  Sets the inner vector to NULL.
+ *
+ */
 PetscVector::PetscVector(){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: empty" << std::endl;
 
@@ -18,12 +16,12 @@ PetscVector::PetscVector(){
 }
 
 
-/*! \fn PetscVector
-    \brief Constructor with given global size of inner vector.
-    
-    Allocate global Vec (VecCreate) with global dimension n.
-    
-*/
+/** @brief Create constructor.
+ *
+ *  Create new vector of given size n.
+ *
+ *  @param n global size of new vector
+ */ 
 PetscVector::PetscVector(int n){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(int)" << std::endl;
 
@@ -35,31 +33,41 @@ PetscVector::PetscVector(int n){
 }
 
 
-/*! \fn PetscVector
-    \brief Duplicate and copy constructor.
-    
-	Duplicate inner vector (VecDuplicate) and copy values (VecCopy).
-    
-*/
-PetscVector::PetscVector(const PetscVector &vec1){
+/** @brief Duplicate constructor.
+ *
+ *  Create new vector by duplicating given one.
+ *
+ *  @param vec original vector to be duplicated
+ */ 
+PetscVector::PetscVector(const PetscVector &vec){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(&vec) ---- DUPLICATE ----" << std::endl;
 
 	/* there is duplicate... this function has to be called as less as possible */
-	TRY( VecDuplicate(vec1.inner_vector, &inner_vector) );
-	TRY( VecCopy(vec1.inner_vector, inner_vector) );
+	TRY( VecDuplicate(vec.inner_vector, &inner_vector) );
+	TRY( VecCopy(vec.inner_vector, inner_vector) );
 	
 }
 
 
-/* PetscVector constructor with inner_vector */
+/** @brief Constructor from Vec.
+ *
+ *  Construct new vector from given Vec.
+ *
+ * @param new_inner_vector original Vec
+ */
 PetscVector::PetscVector(const Vec &new_inner_vector){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(inner_vector)" << std::endl;
 
-	inner_vector = new_inner_vector;
+	this->inner_vector = new_inner_vector;
 }
 
 
-/* PetscVector constructor from comb */
+/** @brief Constructor from linear combination.
+ *
+ *  Creates a new vector from given linear combination.
+ *
+ *  @param new_inner_vector original Vec
+ */ 
 PetscVector::PetscVector(const PetscVectorWrapperComb &comb){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(comb)" << std::endl;
 
@@ -69,13 +77,11 @@ PetscVector::PetscVector(const PetscVectorWrapperComb &comb){
 }
 
 
-
-/*! \fn ~PetscVector
-    \brief Destructor.
-    
-	Destroy inner Vec (VecDestroy).
-    
-*/
+/** @brief Destructor.
+ *
+ *  If inner vector is present, then destroy it.
+ *
+ */ 
 PetscVector::~PetscVector(){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)DESTRUCTOR" << std::endl;
 
@@ -93,7 +99,12 @@ PetscVector::~PetscVector(){
 
 }
 
-/* after update a variable, it is necessary to call asseble begin & end */
+
+/** @brief Update values in inner vector.
+ *
+ *  Calls VecAssemblyBegin and VecAssemblyEnd.
+ *
+ */ 
 void PetscVector::valuesUpdate() const{
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: valuesUpdate()" << std::endl;
 
@@ -101,36 +112,57 @@ void PetscVector::valuesUpdate() const{
 	TRY( VecAssemblyEnd(inner_vector) );
 }
 
-/* set all values of the vector, this function is called from overloaded operator */
+
+/** @brief Update values in inner vector.
+ *
+ *  Set all values of the vector to given value, this function is called from overloaded operator.
+ *
+ *  @param new_value new value of all components
+ *  @todo control if inner_vector was allocated
+ */ 
 void PetscVector::set(double new_value){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: set(double)" << std::endl;
-
-	// TODO: control if inner_vector was allocated
 
 	TRY( VecSet(this->inner_vector,new_value) );
 
 	valuesUpdate();
 }
 
-/* set one specific value of the vector, this function is called from overloaded operator */
+
+/** @brief Update value in inner vector.
+ *
+ *  Set one specific component of the vector to given value, this function is called from overloaded operator.
+ *
+ *  @param index index of component
+ *  @param new_value new value of component
+ *  @todo control if inner_vector was allocated
+ */ 
 void PetscVector::set(int index, double new_value){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: set(int,double)" << std::endl;
-
-	// TODO: control if inner_vector was allocated
 
 	TRY( VecSetValue(this->inner_vector,index,new_value, INSERT_VALUES) );
 	
 	valuesUpdate();
 }
 
-/* returns inner vector */
+
+/** @brief Get inner vector.
+ *
+ *  @return Vec original inner vector
+ *  @todo this function is temporary
+ */ 
 Vec PetscVector::get_vector() const { // TODO: temp
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_vector()" << std::endl;
 		
 	return inner_vector;
 }
 
-/* get size of the vector */
+
+/** @brief Get size of inner vector.
+ *
+ *  @return int global size of inner vector
+ *  @todo control if inner_vector was allocated
+ */ 
 int PetscVector::size() const{
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: size()" << std::endl;
 
@@ -141,7 +173,12 @@ int PetscVector::size() const{
 	return global_size;
 }
 
-/* get local size of the vector */
+
+/** @brief Get local size of inner vector.
+ *
+ *  @return int local size of inner vector
+ *  @todo control if inner_vector was allocated
+ */ 
 int PetscVector::local_size() const{
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: local_size()" << std::endl;
 
@@ -153,7 +190,14 @@ int PetscVector::local_size() const{
 }
 
 
-/* get single value with given id of the vector (works only with local id), really slow */
+/** @brief Get single value.
+ *
+ *  Return single value with given index of component.
+ * 
+ *  @note works only with local id, really slow
+ *  @return int global size of inner vector
+ *  @todo control if inner_vector was allocated
+ */ 
 double PetscVector::get(int i)
 {
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get(int)" << std::endl;
@@ -169,17 +213,37 @@ double PetscVector::get(int i)
 	return y[0];
 }
 
+
+/** @brief Get local array from vector.
+ *
+ *  Call VecGetArray.
+ * 
+ *  @note call restore_array after changes in array
+ *  @param arr array of vector
+ *  @todo control if inner_vector was allocated
+ */ 
 void PetscVector::get_array(double **arr){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_array(double **)" << std::endl;
 
 	TRY( VecGetArray(inner_vector,arr) );
 }
 
+
+/** @brief Restore local array to vector.
+ *
+ *  Call VecRestoreArray.
+ * 
+ *  @note has to be called after get_array
+ *  @param arr array of vector
+ *  @todo control if get_array was called
+ */ 
 void PetscVector::restore_array(double **arr){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: restore_array(double **)" << std::endl;
 
 	TRY( VecRestoreArray(inner_vector,arr) );
 }
+
+
 
 void PetscVector::get_ownership(int *low, int *high){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_ownership(int*, int*)" << std::endl;
