@@ -100,6 +100,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ad4742176d7818e646b2cc835f55dff9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get single value.  <a href="#ad4742176d7818e646b2cc835f55dff9e">More...</a><br /></td></tr>
 <tr class="separator:ad4742176d7818e646b2cc835f55dff9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49f5c93dd64251f6fb2bedf28b9112aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a49f5c93dd64251f6fb2bedf28b9112aa">get_ownership</a> (int *low, int *high)</td></tr>
+<tr class="memdesc:a49f5c93dd64251f6fb2bedf28b9112aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get ownership of global vector.  <a href="#a49f5c93dd64251f6fb2bedf28b9112aa">More...</a><br /></td></tr>
 <tr class="separator:a49f5c93dd64251f6fb2bedf28b9112aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a395a2b4993b73689d354aacd7f21f34f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a395a2b4993b73689d354aacd7f21f34f">get_array</a> (double **arr)</td></tr>
 <tr class="memdesc:a395a2b4993b73689d354aacd7f21f34f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get local array from vector.  <a href="#a395a2b4993b73689d354aacd7f21f34f">More...</a><br /></td></tr>
@@ -108,7 +109,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:acad6d0dd9f6fdb77015cabf4c6a13c97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Restore local array to vector.  <a href="#acad6d0dd9f6fdb77015cabf4c6a13c97">More...</a><br /></td></tr>
 <tr class="separator:acad6d0dd9f6fdb77015cabf4c6a13c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f57041711f7a1f1db2fd5cbe06ae2c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a5f57041711f7a1f1db2fd5cbe06ae2c8">set</a> (double new_value)</td></tr>
-<tr class="memdesc:a5f57041711f7a1f1db2fd5cbe06ae2c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update values in inner vector.  <a href="#a5f57041711f7a1f1db2fd5cbe06ae2c8">More...</a><br /></td></tr>
+<tr class="memdesc:a5f57041711f7a1f1db2fd5cbe06ae2c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set values in inner vector.  <a href="#a5f57041711f7a1f1db2fd5cbe06ae2c8">More...</a><br /></td></tr>
 <tr class="separator:a5f57041711f7a1f1db2fd5cbe06ae2c8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a317bf51adad1474b7b311ca21841d211"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a317bf51adad1474b7b311ca21841d211">set</a> (int index, double new_value)</td></tr>
 <tr class="memdesc:a317bf51adad1474b7b311ca21841d211"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update value in inner vector.  <a href="#a317bf51adad1474b7b311ca21841d211">More...</a><br /></td></tr>
@@ -305,7 +306,7 @@ Friends</h2></td></tr>
           <td class="memname">double petscvector::PetscVector::get </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>i</em></td><td>)</td>
+          <td class="paramname"><em>index</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -315,7 +316,7 @@ Friends</h2></td></tr>
 <p>Return single value with given index of component.</p>
 <dl class="section note"><dt>Note</dt><dd>works only with local id, really slow </dd></dl>
 <dl class="section return"><dt>Returns</dt><dd>int global size of inner vector </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -342,7 +343,7 @@ Friends</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000007">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -370,6 +371,17 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Get ownership of global vector. </p>
+<p>Call VecGetOwnershipRange, get the indeces of local components.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">low</td><td>start index </td></tr>
+    <tr><td class="paramname">high</td><td>end index + 1 </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a1ff92bf63ecdabfbed562732688109e9"></a>
@@ -387,7 +399,7 @@ Friends</h2></td></tr>
 
 <p>Get inner vector. </p>
 <dl class="section return"><dt>Returns</dt><dd>Vec original inner vector </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>this function is temporary </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>this function is temporary </dd></dl>
 
 </div>
 </div>
@@ -406,7 +418,7 @@ Friends</h2></td></tr>
 
 <p>Get local size of inner vector. </p>
 <dl class="section return"><dt>Returns</dt><dd>int local size of inner vector </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000005">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000003">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -581,7 +593,7 @@ template&lt;class VectorType &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>control if get_array was called </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000007">Todo:</a></b></dt><dd>control if get_array was called </dd></dl>
 
 </div>
 </div>
@@ -615,7 +627,7 @@ template&lt;class VectorType &gt; </div>
       </table>
 </div><div class="memdoc">
 
-<p>Update values in inner vector. </p>
+<p>Set values in inner vector. </p>
 <p>Set all values of the vector to given value, this function is called from overloaded operator.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
@@ -623,7 +635,7 @@ template&lt;class VectorType &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000001">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -660,7 +672,7 @@ template&lt;class VectorType &gt; </div>
   </table>
   </dd>
 </dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000009">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -679,7 +691,7 @@ template&lt;class VectorType &gt; </div>
 
 <p>Get size of inner vector. </p>
 <dl class="section return"><dt>Returns</dt><dd>int global size of inner vector </dd></dl>
-<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000004">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000002">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -1006,7 +1018,7 @@ template&lt;class VectorType &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Mar 4 2016 00:07:48 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Mar 4 2016 00:16:41 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
