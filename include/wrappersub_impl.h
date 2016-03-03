@@ -187,7 +187,7 @@ PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(const PetscVector &vec2)
 //}
 
 /* vec1 = linear_combination, perform full linear combination */
-PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(const PetscVectorWrapperComb &comb){
+PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(PetscVectorWrapperComb comb){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperSub)OPERATOR: (subvec = comb)" << std::endl;
 
 	/* vec1 is not initialized yet */
@@ -195,12 +195,8 @@ PetscVectorWrapperSub &PetscVectorWrapperSub::operator=(const PetscVectorWrapper
 		//TODO: give error
 	}
 
-	/* subvec = 0, we will perform MAXPY (y += lin_comb) */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - set vector LHS = 0" << std::endl;		
-	TRY( VecSet(subvector,0.0) );
-
-	/* subvec += comb */
-	*this += comb; 
+	/* vec = comb */
+	comb.compute(subvector,0.0);
 
 	return *this;	
 }
@@ -218,28 +214,7 @@ void operator+=(const PetscVectorWrapperSub &subvec, PetscVectorWrapperComb comb
 {
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)OPERATOR: vec += comb" << std::endl;
 	
-	int list_size = comb.get_listsize();
-	
-	PetscScalar *alphas;
-	Vec *vectors;
-
-	/* allocate memory */
-	TRY(PetscMalloc(sizeof(PetscScalar)*list_size,&alphas));
-	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
-
-	/* get array with coefficients and vectors */
-	comb.get_arrays(alphas,vectors);
-
-	/* vec1 = vec1 + sum (coeff*vector) */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - perform MAXPY" << std::endl;
-	VecMAXPY(subvec.subvector,list_size,alphas,vectors);
-	subvec.valuesUpdate();
-
-	/* free memory */
-	TRY(PetscFree(alphas));
-	TRY(PetscFree(vectors));
-
-
+	comb.compute(subvec.subvector,1.0);
 }
 
 /* subvec1 -= comb */

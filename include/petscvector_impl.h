@@ -52,10 +52,20 @@ PetscVector::PetscVector(const PetscVector &vec1){
 
 
 /* PetscVector constructor with inner_vector */
-PetscVector::PetscVector(Vec new_inner_vector){
+PetscVector::PetscVector(const Vec &new_inner_vector){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(inner_vector)" << std::endl;
 
 	inner_vector = new_inner_vector;
+}
+
+
+/* PetscVector constructor from comb */
+PetscVector::PetscVector(const PetscVectorWrapperComb &comb){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(comb)" << std::endl;
+
+	inner_vector = NULL;
+	*this = comb; /* assemble the linear combination */
+
 }
 
 
@@ -238,52 +248,20 @@ PetscVector &PetscVector::operator=(const PetscVector &vec2){
 	return *this;	
 }
 
-/* vec1 = linear_combination_node, perform simple linear combination */
-PetscVector &PetscVector::operator=(PetscVectorWrapperCombNode combnode){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)OPERATOR: (vec = combnode)" << std::endl;
-
-	/* vec1 = alpha*vec1 => simple scale */
-    if (this->inner_vector == combnode.get_vector()){
-		if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - scale values" << std::endl;		
-
-        this->scale(combnode.get_coeff());
-        return *this;
-	}
-
-	/* vec1 is not initialized yet */
-	if (!inner_vector){
-		if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - duplicate vector" << std::endl;		
-
-		TRY( VecDuplicate(combnode.get_vector(),&inner_vector) );
-	}
-
-	/* else copy the vector values and then scale */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - copy values" << std::endl;		
-
-	TRY( VecCopy(combnode.get_vector(),inner_vector));
-	
-    this->scale(combnode.get_coeff());
-
-	return *this;	
-}
-
-/* vec1 = linear_combination, perform full linear combination */
+/* vec1 = linear_combination, perform full linear combination 
+ * assemble linear combination and perform maxpy
+ * */
 PetscVector &PetscVector::operator=(PetscVectorWrapperComb comb){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)OPERATOR: (vec = comb)" << std::endl;
 
 	/* vec1 is not initialized yet */
 	if (!inner_vector){
 		if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - duplicate vector" << std::endl;		
-
 		TRY( VecDuplicate(comb.get_first_vector(),&inner_vector) );
 	}
 
-	/* vec1 = 0, we will perform MAXPY (y += lin_comb) */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - set vector LHS = 0" << std::endl;		
-	TRY( VecSet(inner_vector,0.0) );
-
-	/* vec += comb */
-	*this += comb; 
+	/* vec = comb */
+	comb.compute(inner_vector,0.0);
 
 	return *this;	
 }
@@ -358,30 +336,12 @@ void operator*=(PetscVector &vec1, double alpha)
 }
 
 /* vec1 += comb */
-void operator+=(PetscVector &vec1, PetscVectorWrapperComb comb)
+void operator+=(const PetscVector &vec1, PetscVectorWrapperComb comb)
 {
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)OPERATOR: vec += comb" << std::endl;
 	
-	int list_size = comb.get_listsize();
-	PetscScalar *alphas;
-	Vec *vectors;
-
-	/* allocate memory */
-	TRY(PetscMalloc(sizeof(PetscScalar)*list_size,&alphas));
-	TRY(PetscMalloc(sizeof(Vec)*list_size,&vectors));
-
-	/* get array with coefficients and vectors */
-	comb.get_arrays(alphas,vectors);
-
-	/* vec1 = vec1 + sum (coeff*vector) */
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - perform MAXPY" << std::endl;
-	VecMAXPY(vec1.inner_vector,list_size,alphas,vectors);
-	vec1.valuesUpdate();
-
-	/* free memory */
-	TRY(PetscFree(alphas));
-	TRY(PetscFree(vectors));
-
+	/* vec1.inner_vector should be allocated */
+	comb.compute(vec1.inner_vector,1.0);
 }
 
 /* vec1 -= comb */
