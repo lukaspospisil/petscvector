@@ -40,10 +40,77 @@
 <div class="title">PetscVector Documentation</div>  </div>
 </div><!--header-->
 <div class="contents">
-</div><!-- contents -->
+<div class="textblock"><p>Simple C++ Petsc wrapper for manipulation with vectors. The library provides basic vector operations for Petsc Vec in MinLin-Matlab-style using overloaded operations.</p>
+<p>Inspirated by <a href="https://github.com/bcumming/minlin">MINLIN</a> (Minimal linear algebra library, Timothy Moroney, Ben Cumming)</p>
+<p>&gt;Created by Lukas Pospisil, USI Lugano, 2016 (during <code>PASC:HPC-Causality project</code> - Illia Horenko, Patrick Gagliardini, Will Sawyer)</p>
+<h2>Installation on PIZ Daint and the first fun</h2>
+<ul>
+<li>log into ELA machine using <code>ssh username@ela.cscs.ch</code> and afterwards into PIZ Daint using <code>ssh daint</code></li>
+<li>clone repository using <code>git clone <a href="https://github.com/lukaspospisil/petscvector.git">https://github.com/lukaspospisil/petscvector.git</a></code></li>
+<li>load necessary modules using <code>source util/module_load_daint</code></li>
+<li>create folder <code>tests/build</code> (this folder is in <code>.gitignore</code>)</li>
+<li>get into created folder and call <code>cmake ..</code>, the makefile should be created</li>
+<li>call <code>make</code></li>
+<li>if you want to run an example, you will have to use SLURM, for example at first allocate some nodes to interactive session ``` salloc -N 4 &ndash;account=**** &ndash;partition=normal ``` and afterwards, load modules again, and run sample using ``` aprun -n 4 ./program ```</li>
+</ul>
+<h2>Operations</h2>
+<p>Currently there are only few operations available. See the list bellow.</p>
+<h6>create (allocate) vector using constructor:</h6>
+<ul>
+<li><code>PetscVector()</code> - allocate vector with unallocated inner Vec, Vec should be allocated afterwards</li>
+<li><code>PetscVector(int n)</code> - allocate vector of dimension n</li>
+<li><code>PetscVector(const PetscVector &amp;vec1)</code> - duplicate input vec1 and copy values to new vector</li>
+<li><code>PetscVector(Vec new_inner_vector)</code> - set inner Vec vector (i.e. pointer) to new allocated PetscVector</li>
+</ul>
+<h6>destroy (free) vector using destructor:</h6>
+<ul>
+<li><code>~PetscVector()</code> - destroy inner Vec</li>
+</ul>
+<h6>general methods, mostly used inside overloaded operators:</h6>
+<ul>
+<li><code>void valuesUpdate() const</code> - call VecAssemblyBegin and VecAssemblyEnd</li>
+<li><code>int size() const</code> - get the global size of inner Vec</li>
+<li><code>int local_size() const</code> - get local size of inner Vec</li>
+<li><code>void get_ownership(int *low, int *high)</code> - get ownership of Vec</li>
+<li><code>double get(int index)</code> - get one value with index from the Vec</li>
+<li><code>void get_array(double **arr)</code> - get the double array from Vec, restore_array should be called consequently</li>
+<li><code>void restore_array(double **arr)</code> - restore array after modifications into Vec</li>
+<li><code>void scale(double alpha)</code> - scale all Vec values, call VecScale</li>
+<li><code>void set(double new_value)</code> - set all values in Vec, call VecSet</li>
+<li><code>void set(int index, double new_value)</code> - set value with index to new_value</li>
+</ul>
+<h6>assignment operators</h6>
+<ul>
+<li><code>PetscVector &amp;operator=(const PetscVector &amp;vec2)</code> [ <code>y=x</code> ] - copy values from one vector to another</li>
+<li><code>PetscVector &amp;operator=(PetscVectorWrapperCombNode combnode)</code> [ <code>y=alpha*y</code>, <code>y=alpha*x</code> ]</li>
+<li><code>PetscVector &amp;operator=(PetscVectorWrapperComb comb)</code> [ <code>y=sum{alpha_i*x_i}</code> ]</li>
+<li><code>PetscVector &amp;operator=(double scalar_value)</code> [ <code>y=alpha</code> ] - call set(scalar_value)</li>
+</ul>
+<h6>operators with subvectors</h6>
+<ul>
+<li><code>PetscVectorWrapperSub operator()(int index) const</code> [ <code>y(index)</code> ] - get subvector of length 1, which includes y(index)</li>
+<li><code>PetscVectorWrapperSub operator()(int index_begin,int index_end) const</code> [ <code>y(begin,end)</code> ] - get subvector of stride index set from begin to end</li>
+<li><code>PetscVectorWrapperSub operator()(const IS new_subvector_is) const</code> [ <code>y(IS)</code> ] - get subvector subject to given Petsc-index set, this index set will be not destroyed in PetscVectorWrapperSub-destroyer</li>
+</ul>
+<h6>other operators</h6>
+<ul>
+<li><code>std::ostream &amp;operator&lt;&lt;(std::ostream &amp;output, const PetscVector &amp;vector)</code> [ <code>std::cout &lt;&lt; y</code> ] - print the vector, I decided to write my own function, not to use VecView</li>
+<li><code>void operator*=(PetscVector &amp;vec1, double alpha)</code> [ <code>y*=alpha</code> ] - scale vector values, call scale(alpha)</li>
+<li><code>void operator+=(PetscVector &amp;vec1, const PetscVectorWrapperComb comb)</code> [ <code>y+=sum{alpha_i*x_i}</code> ]</li>
+<li><code>void operator-=(PetscVector &amp;vec1, const PetscVectorWrapperComb comb)</code> [ <code>y-=sum{alpha_i*x_i}</code> ]</li>
+</ul>
+<h6>basic linear algebra functions</h6>
+<ul>
+<li><code>double dot(const PetscVector &amp;vec1, const PetscVector &amp;vec2)</code> [ <code>dot(vec1,vec2)</code> ] - compute dot product using VecDot</li>
+<li><code>double max(const PetscVector &amp;vec1)</code> [ <code>max(vec1)</code> ] - get maximum value in vector using VecMax</li>
+<li><code>double sum(const PetscVector &amp;vec1)</code> [ <code>sum(vec1)</code> ] - compute the sum of the vector values using VecSum</li>
+<li><code>double norm(const PetscVector &amp;vec1)</code> [ <code>norm(vec1)</code> ] - compute the NORM_2 of the vector using VecNorm</li>
+<li><code>const PetscVector operator/(const PetscVector &amp;vec1, const PetscVector &amp;vec2)</code> [ <code>vec3 = vec1/vec2</code> ] </li>
+</ul>
+</div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Mar 3 2016 20:21:10 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Mar 3 2016 20:22:06 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
