@@ -60,29 +60,145 @@ class PetscVector {
 		
 	public:
 
+		/** @brief The basic constructor.
+		* 
+		*  Sets the inner vector to NULL.
+		*
+		*/
 		PetscVector();
+
+		/** @brief Create constructor.
+		*
+		*  Create new vector of given size n.
+		*
+		*  @param n global size of new vector
+		*/ 
 		PetscVector(int n);
+		
+		/** @brief Duplicate constructor.
+		*
+		*  Create new vector by duplicating given one.
+		*
+		*  @param vec original vector to be duplicated
+		*/ 
 		PetscVector(const PetscVector &vec1);
+
+		/** @brief Constructor from Vec.
+		*
+		*  Construct new vector from given Vec.
+		*
+		* @param new_inner_vector original Vec
+		*/
 		PetscVector(const Vec &new_inner_vector);
+
+		/** @brief Constructor from linear combination.
+		*
+		*  Creates a new vector from given linear combination.
+		*
+		*  @param new_inner_vector original Vec
+		*/ 
 		PetscVector(const PetscVectorWrapperComb &comb);
+
+		/** @brief Destructor.
+		*
+		*  If inner vector is present, then destroy it.
+		*
+		*/ 
 		~PetscVector();
 
-		/* general methods */
+		/** @brief Update values in inner vector.
+		*
+		*  Calls VecAssemblyBegin and VecAssemblyEnd.
+		*
+		*/
 		void valuesUpdate() const;
+
+		/** @brief Scale all values in inner vector.
+		*
+		*  Call VecScale.
+		* 
+		*  @param alpha the scaling coeficient
+		*/ 
 		void scale(double alpha);
 
+		/** @brief Get inner vector.
+		*
+		*  @return original inner vector
+		*  @todo this function is temporary
+		*/ 
 		Vec get_vector() const; // TODO: temp, direct access to inner vector should be forbidden
 
+		/** @brief Get size of inner vector.
+		*
+		*  @return global size of inner vector
+		*  @todo control if inner_vector was allocated
+		*/ 
 		int size() const;
+
+		/** @brief Get local size of inner vector.
+		*
+		*  @return local size of inner vector
+		*  @todo control if inner_vector was allocated
+		*/ 
 		int local_size() const;
 
+		/** @brief Get single value.
+		*
+		*  Return single value with given index of component.
+		* 
+		*  @note works only with local id, really slow
+		*  @return global size of inner vector
+		*  @todo control if inner_vector was allocated
+		*/ 
 		double get(int index);
+		
+		/** @brief Get ownership of global vector.
+		*
+		*  Call VecGetOwnershipRange, get the indeces of local components.
+		* 
+		*  @param low start index
+		*  @param high end index + 1
+		*  @todo control if inner_vector was allocated
+		*/ 
 		void get_ownership(int *low, int *high);
 
-		void get_array(double **arr);
+		/** @brief Get local array from vector.
+		*
+		*  Call VecGetArray.
+		* 
+		*  @note call restore_array after changes in array
+		*  @param arr array of vector
+		*  @todo control if inner_vector was allocated
+		*/ 
+ 		void get_array(double **arr);
+
+		/** @brief Restore local array to vector.
+		*
+		*  Call VecRestoreArray.
+		* 
+		*  @note has to be called after get_array	
+		*  @param arr array of vector
+		*  @todo control if get_array was called
+		*/ 
 		void restore_array(double **arr);
 
+		/** @brief Set values in inner vector.
+		*
+		*  Set all values of the vector to given value, this function is called from overloaded operator.
+		*
+		*  @param new_value new value of all components
+		*  @todo control if inner_vector was allocated
+		*/ 
 		void set(double new_value);
+
+		/** @brief Update value in inner vector.
+		*
+		*  Set one specific component of the vector to given value, this function is called from overloaded operator.
+		*
+		*  @param index index of component
+		*  @param new_value new value of component
+		*  @todo control if inner_vector was allocated
+		*/ 
 		void set(int index, double new_value);
 
 		/* assignment */
