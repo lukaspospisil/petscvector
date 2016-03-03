@@ -7,6 +7,8 @@ Inspirated by [MINLIN](https://github.com/bcumming/minlin)
 
 >Created by Lukas Pospisil, USI Lugano, 2016 (during `PASC:HPC-Causality project` - Illia Horenko, Patrick Gagliardini, Will Sawyer)
 
+For full documentation, see [generated doxygen documentation](http://lukaspospisil.github.io/petscvector).
+
 ## Installation on PIZ Daint and the first fun
 - log into ELA machine using `ssh username@ela.cscs.ch` and afterwards into PIZ Daint using `ssh daint`
 - clone repository using `git clone https://github.com/lukaspospisil/petscvector.git`
