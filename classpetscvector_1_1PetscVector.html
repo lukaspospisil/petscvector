@@ -97,12 +97,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a779782e5c39ae9fe2c82deb3d460dfc8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get local size of inner vector.  <a href="#a779782e5c39ae9fe2c82deb3d460dfc8">More...</a><br /></td></tr>
 <tr class="separator:a779782e5c39ae9fe2c82deb3d460dfc8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad4742176d7818e646b2cc835f55dff9e"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#ad4742176d7818e646b2cc835f55dff9e">get</a> (int index)</td></tr>
+<tr class="memdesc:ad4742176d7818e646b2cc835f55dff9e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get single value.  <a href="#ad4742176d7818e646b2cc835f55dff9e">More...</a><br /></td></tr>
 <tr class="separator:ad4742176d7818e646b2cc835f55dff9e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a49f5c93dd64251f6fb2bedf28b9112aa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a49f5c93dd64251f6fb2bedf28b9112aa">get_ownership</a> (int *low, int *high)</td></tr>
 <tr class="separator:a49f5c93dd64251f6fb2bedf28b9112aa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a395a2b4993b73689d354aacd7f21f34f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a395a2b4993b73689d354aacd7f21f34f">get_array</a> (double **arr)</td></tr>
+<tr class="memdesc:a395a2b4993b73689d354aacd7f21f34f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get local array from vector.  <a href="#a395a2b4993b73689d354aacd7f21f34f">More...</a><br /></td></tr>
 <tr class="separator:a395a2b4993b73689d354aacd7f21f34f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acad6d0dd9f6fdb77015cabf4c6a13c97"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#acad6d0dd9f6fdb77015cabf4c6a13c97">restore_array</a> (double **arr)</td></tr>
+<tr class="memdesc:acad6d0dd9f6fdb77015cabf4c6a13c97"><td class="mdescLeft">&#160;</td><td class="mdescRight">Restore local array to vector.  <a href="#acad6d0dd9f6fdb77015cabf4c6a13c97">More...</a><br /></td></tr>
 <tr class="separator:acad6d0dd9f6fdb77015cabf4c6a13c97"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5f57041711f7a1f1db2fd5cbe06ae2c8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a5f57041711f7a1f1db2fd5cbe06ae2c8">set</a> (double new_value)</td></tr>
 <tr class="memdesc:a5f57041711f7a1f1db2fd5cbe06ae2c8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Update values in inner vector.  <a href="#a5f57041711f7a1f1db2fd5cbe06ae2c8">More...</a><br /></td></tr>
@@ -302,11 +305,17 @@ Friends</h2></td></tr>
           <td class="memname">double petscvector::PetscVector::get </td>
           <td>(</td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>index</em></td><td>)</td>
+          <td class="paramname"><em>i</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Get single value. </p>
+<p>Return single value with given index of component.</p>
+<dl class="section note"><dt>Note</dt><dd>works only with local id, really slow </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>int global size of inner vector </dd></dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000006">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -323,6 +332,17 @@ Friends</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Get local array from vector. </p>
+<p>Call VecGetArray.</p>
+<dl class="section note"><dt>Note</dt><dd>call restore_array after changes in array </dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">arr</td><td>array of vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000007">Todo:</a></b></dt><dd>control if inner_vector was allocated </dd></dl>
 
 </div>
 </div>
@@ -551,6 +571,17 @@ template&lt;class VectorType &gt; </div>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Restore local array to vector. </p>
+<p>Call VecRestoreArray.</p>
+<dl class="section note"><dt>Note</dt><dd>has to be called after get_array </dd></dl>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">arr</td><td>array of vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000008">Todo:</a></b></dt><dd>control if get_array was called </dd></dl>
 
 </div>
 </div>
@@ -975,7 +1006,7 @@ template&lt;class VectorType &gt; </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Thu Mar 3 2016 23:20:32 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Mar 3 2016 23:41:34 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
