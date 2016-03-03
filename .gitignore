@@ -10,3 +10,4 @@ nbproject
 *.sh
 
 tests/build
+html
