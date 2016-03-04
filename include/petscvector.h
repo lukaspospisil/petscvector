@@ -3,6 +3,8 @@
  *
  *  This defines the basic layout of all used classes. In the end of the file,
  *  the files with specific implementations are included.
+ *  This is the file which has to be included in the project to provide the work 
+ *  with Petsc vectors in Min-Lin Matlab style.
  *
  *  @author Lukas Pospisil
  *  @bug No known bugs.
@@ -20,22 +22,26 @@
 /* basic input/output in c++ */
 #include <iostream>
 
-
+/* for manipulating with strings */
 #include <string>
 
 /* to deal with errors, call Petsc functions with TRY(fun); */
-static PetscErrorCode ierr;
+static PetscErrorCode ierr; /**< to deal with PetscError */
+
+/**
+ * \def TRY(f)
+ * Macro for dealing with PetscError. Each original Petsc function could by called using TRY(...).
+*/
 #define TRY( f) {ierr = f; do {if (PetscUnlikely(ierr)) {PetscError(PETSC_COMM_SELF,__LINE__,PETSC_FUNCTION_NAME,__FILE__,ierr,PETSC_ERROR_IN_CXX,0);}} while(0);}
 
 /* we are using namespace petscvector */
 namespace petscvector {
 
-int DEBUG_MODE_PETSCVECTOR = true;
-bool PETSC_INITIALIZED = false;
+int DEBUG_MODE_PETSCVECTOR = true; /**< defines the debug mode of the functions */
+bool PETSC_INITIALIZED = false; /**< to deal with PetscInitialize and PetscFinalize outside this class */
 
 /* define "all" stuff */
-class petscvector_all_type {} all; 
-
+class petscvector_all_type {} all; /**< brings an opportunity to call PetscVector(all) */
 
 /* wrapper to allow manipulation with linear combinations of vectors */
 class PetscVectorWrapperComb;
@@ -46,17 +52,13 @@ class PetscVectorWrapperCombNode;
 /* wrapper to allow subvectors */
 class PetscVectorWrapperSub; 
 
-/* class for manipulation with A*x as a RHS */
-template<class VectorType> class GeneralMatrixRHS; 
-
-/*! \class PetscVector
-    \brief General class for manipulation with vectors.
-
-    
+/** \class PetscVector
+ *  \brief General class for manipulation with vectors.
+ *
 */
 class PetscVector {
 	private:
-		Vec inner_vector; /* original Petsc Vector */
+		Vec inner_vector; /**< original Petsc Vector */
 		
 	public:
 
@@ -228,19 +230,14 @@ class PetscVector {
 		/* other operations */
 		friend const PetscVector operator/(const PetscVector &vec1, const PetscVector &vec2);
 
-		/* y = A*x, where A*x is created as RHS */
-		template<class VectorType>
-		VectorType &operator=(GeneralMatrixRHS<VectorType> rhs){
-			rhs.matmult(*this);
-			return *this;
-		}
-
 };
 
 
-/*! \class PetscVectorWrapperComb
-    \brief Wrapper to allow linear combinations of vectors.
-
+/** \class PetscVectorWrapperComb
+ *  \brief Wrapper to allow linear combinations of vectors.
+ *
+ *  The linar combinations of vector is stored in the list of PetscVectorWrapperComb.
+ *  Finally, using the assignment operator in PetscVector, function compute() is called.
 */
 class PetscVectorWrapperComb
 {

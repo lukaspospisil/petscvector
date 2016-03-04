@@ -11,3 +11,4 @@ nbproject
 
 tests/build
 html
+doxygen_sqlite3.db

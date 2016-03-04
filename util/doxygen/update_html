@@ -1,3 +1,4 @@
+rm html/*
 doxygen util/doxygen/config.dox
 cd html
 git add .
