@@ -144,9 +144,11 @@ Friends</h2></td></tr>
 <tr class="memitem:aac586744eb74501e5b5c24949b00c6e9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#aac586744eb74501e5b5c24949b00c6e9">operator-=</a> (<a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;vec1, const <a class="el" href="classpetscvector_1_1PetscVectorWrapperComb.html">PetscVectorWrapperComb</a> comb)</td></tr>
 <tr class="separator:aac586744eb74501e5b5c24949b00c6e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a653bdb162fa628d8d237612bad987db0"><td class="memItemLeft" align="right" valign="top">std::ostream &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a653bdb162fa628d8d237612bad987db0">operator&lt;&lt;</a> (std::ostream &amp;output, const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;vector)</td></tr>
+<tr class="memdesc:a653bdb162fa628d8d237612bad987db0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stream insertion operator.  <a href="#a653bdb162fa628d8d237612bad987db0">More...</a><br /></td></tr>
 <tr class="separator:a653bdb162fa628d8d237612bad987db0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:adab985935204e29729b2c5c26480d117"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#adab985935204e29729b2c5c26480d117">dot</a> (const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;vec1, const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;vec2)</td></tr>
-<tr class="separator:adab985935204e29729b2c5c26480d117"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae148c7d75eb32b6b0486bf6051d6f168"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#ae148c7d75eb32b6b0486bf6051d6f168">dot</a> (const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;x, const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;y)</td></tr>
+<tr class="memdesc:ae148c7d75eb32b6b0486bf6051d6f168"><td class="mdescLeft">&#160;</td><td class="mdescRight">Compute dot product.  <a href="#ae148c7d75eb32b6b0486bf6051d6f168">More...</a><br /></td></tr>
+<tr class="separator:ae148c7d75eb32b6b0486bf6051d6f168"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abae7340230d032a2eee71d69918060ef"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#abae7340230d032a2eee71d69918060ef">max</a> (const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;vec1)</td></tr>
 <tr class="separator:abae7340230d032a2eee71d69918060ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c6a7a919cb2bc131abdb9ae5d2f0b80"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html#a3c6a7a919cb2bc131abdb9ae5d2f0b80">sum</a> (const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;vec1)</td></tr>
@@ -695,7 +697,7 @@ Friends</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Friends And Related Function Documentation</h2>
-<a class="anchor" id="adab985935204e29729b2c5c26480d117"></a>
+<a class="anchor" id="ae148c7d75eb32b6b0486bf6051d6f168"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -706,13 +708,13 @@ Friends</h2></td></tr>
           <td class="memname">double dot </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;&#160;</td>
-          <td class="paramname"><em>vec1</em>, </td>
+          <td class="paramname"><em>x</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const <a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a> &amp;&#160;</td>
-          <td class="paramname"><em>vec2</em>&#160;</td>
+          <td class="paramname"><em>y</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -726,6 +728,17 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Compute dot product. </p>
+<p>compute dot product of two given vectors. $${result} =  x,y  = {i = 0}^{size-1} x_i y_i$$</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>first vector </td></tr>
+    <tr><td class="paramname">y</td><td>second vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>control if inner_vectors were allocated </dd></dl>
 
 </div>
 </div>
@@ -945,6 +958,17 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Stream insertion operator. </p>
+<p>Prints the content of inner_vector.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">output</td><td>output stream </td></tr>
+    <tr><td class="paramname">vector</td><td>instance of <a class="el" href="classpetscvector_1_1PetscVector.html" title="General class for manipulation with vectors. ">PetscVector</a> to be printed </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000010">Todo:</a></b></dt><dd>print local portion of the vector </dd></dl>
+
 </div>
 </div>
 <a class="anchor" id="a3c6a7a919cb2bc131abdb9ae5d2f0b80"></a>
@@ -1000,7 +1024,7 @@ Friends</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Mar 4 2016 10:59:41 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Mar 4 2016 11:13:00 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
