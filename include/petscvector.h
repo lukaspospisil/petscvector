@@ -103,7 +103,7 @@ class PetscVector {
 
 		/** @brief Destructor.
 		*
-		*  If inner vector is present, then destroy it.
+		*  If inner vector is present, then destroy it using VecDestroy.
 		*
 		*/ 
 		~PetscVector();
@@ -203,32 +203,135 @@ class PetscVector {
 		*/ 
 		void set(int index, double new_value);
 
-		/* assignment */
-		PetscVector &operator=(const PetscVector &vec2);
-		PetscVector &operator=(double scalar_value);
+		/** @brief Assignment operator.
+		*
+		*  Copy values from one vector to another.
+		*  If the inner vector does not exist, then duplicate the vector at first.
+		*
+		*  @param x vector with new values
+		*/ 
+		PetscVector &operator=(const PetscVector &x);
+
+		/** @brief Assignment operator.
+		*
+		*  Set all values in the vector equal to given one.
+		*
+		*  @param alpha new value
+		*  @todo give error if inner_vector does not exist
+		*/ 
+		PetscVector &operator=(double alpha);
+
+		/** @brief Assignment operator.
+		*
+		*  Set values of the vector equal to the result from linear combination.
+		*  If the inner vector does not exist, then duplicate the vector at first.
+		*
+		*  @param comb linear combination
+		*/ 
 		PetscVector &operator=(PetscVectorWrapperComb comb);
 
 		friend void operator*=(PetscVector &vec1, double alpha);
 		friend void operator+=(const PetscVector &vec1, const PetscVectorWrapperComb comb);
 		friend void operator-=(PetscVector &vec1, const PetscVectorWrapperComb comb);
 
-		/* subvector */
+		/** @brief Get subvector.
+		*
+		*  Get the subvector with one element defined by given index.
+		*
+		*  @param index index of the element
+		*  @return subvector 
+		*/ 
 		PetscVectorWrapperSub operator()(int index) const;
-		PetscVectorWrapperSub operator()(int index_begin,int index_end) const;
-		PetscVectorWrapperSub operator()(const IS new_subvector_is) const;
-		PetscVectorWrapperSub operator()(petscvector_all_type all_type) const; /* define operator PetscVector(all)  */
 
-		/* print */
+		/** @brief Get subvector.
+		*
+		*  Get the subvector with elements defined by given lower and upper index.
+		*
+		*  @param index_begin first index of the subvector
+		*  @param index_end last index of the subvector
+		*  @return subvector 
+		*/ 
+		PetscVectorWrapperSub operator()(int index_begin,int index_end) const;
+
+		/** @brief Get subvector.
+		*
+		*  Get the subvector with elements defined by given Petsc Index set.
+		*
+		*  @param is index set
+		*  @return subvector 
+		*/ 
+		PetscVectorWrapperSub operator()(const IS is) const;
+
+		/** @brief Get subvector.
+		*
+		*  Get the subvector with all elements.
+		*
+		*  @param all
+		*  @return subvector 
+		*/ 
+		PetscVectorWrapperSub operator()(petscvector_all_type all) const; /* define operator PetscVector(all)  */
+
+		/** @brief Stream insertion operator.
+		*
+		*  Prints the content of inner_vector.
+		*
+		*  @param output output stream
+		*  @param vector instance of PetscVector to be printed
+		*  @todo print local portion of the vector
+		*/ 
 		friend std::ostream &operator<<(std::ostream &output, const PetscVector &vector);
 
-		/* binary operations */
-		friend double dot(const PetscVector &vec1, const PetscVector &vec2);
-		friend double max(const PetscVector &vec1);
-		friend double sum(const PetscVector &vec1);
-		friend double norm(const PetscVector &vec1);
+		/** @brief Compute dot product.
+		*
+		*  Computes dot product of two given vectors.
+		*  \f[\mathrm{result} = \langle x,y \rangle = \sum\limits_{i = 0}^{size-1} x_i y_i\f]
+		*
+		*  @param x first vector
+		*  @param y second vector
+		*  @todo control if inner_vectors were allocated
+		*/ 
+		friend double dot(const PetscVector &x, const PetscVector &y);
 
-		/* other operations */
-		friend const PetscVector operator/(const PetscVector &vec1, const PetscVector &vec2);
+		/** @brief Get the maximum value in vector.
+		*
+		*  Computes the maximum value in given vector.
+		*  \f[\mathrm{result} = \max \lbrace x_i, i = 0, \dots size-1 \rbrace\f]
+		*
+		*  @param x vector
+		*  @todo control if inner_vector wax allocated
+		*/ 
+		friend double max(const PetscVector &x);
+		
+		/** @brief Get the sum of values in vector.
+		*
+		*  Computes the sum of components of given vector.
+		*  \f[\mathrm{result} = \sum\limits_{i = 0}^{size-1} x_i \f]
+		*
+		*  @param x vector
+		*  @todo control if inner_vector wax allocated
+		*/ 
+		friend double sum(const PetscVector &x);
+
+		/** @brief Get 2-norm of vector.
+		*
+		*  Computes the sum of components of given vector.
+		*  \f[\mathrm{result} = \Vert x \Vert_2 = \sqrt{\sum\limits_{i = 0}^{size-1} x_i^2} \f]
+		*
+		*  @param x vector
+		*  @todo control if inner_vector wax allocated
+		*/ 
+		friend double norm(const PetscVector &x);
+
+		/** @brief Pointwise divide of two vectors.
+		*
+		*  Divide values of the inner vector by components of input vector.
+		*  \f[ x_i = \frac{x_i}{y_i}, ~~\forall i = 0, \dots, size-1 \f]
+		*
+		*  @param x vector
+		*  @param y vector
+		*  @todo this function is really strange 
+		*/ 
+		friend const PetscVector operator/(const PetscVector &x, const PetscVector &y);
 
 };
 
@@ -236,39 +339,138 @@ class PetscVector {
 /** \class PetscVectorWrapperComb
  *  \brief Wrapper to allow linear combinations of vectors.
  *
- *  The linar combinations of vector is stored in the list of PetscVectorWrapperComb.
+ *  The linear combination of vector is stored in the list of PetscVectorWrapperComb.
  *  Finally, using the assignment operator in PetscVector, function compute() is called.
 */
 class PetscVectorWrapperComb
 {
 	private:
-		std::list<PetscVectorWrapperCombNode> comb_list; /* the list of linear combination nodes */
-		
-		int vector_size; /* store the global size of the last added vector */
+		std::list<PetscVectorWrapperCombNode> comb_list; /**< the list of linear combination nodes */
+		int vector_size; /**< stores the global size of the last added vector */
 		
 	public:
-		/* constructors and destructor */
+		/** @brief The basic constructor.
+		* 
+		*  @todo deprecated - there is no reason to create empty combination
+		*/
 		PetscVectorWrapperComb();
-		PetscVectorWrapperComb(const PetscVector &vec);
-		PetscVectorWrapperComb(const PetscVectorWrapperCombNode &comb_node);
-		PetscVectorWrapperComb(PetscVectorWrapperSub subvector);
 
+		/** @brief Constructor from stand-alone vector.
+		* 
+		*  If the vector is in given in linear combination without coefficient, 
+		*  it will be added to the combination as a node with coefficient 1.0.
+		* 
+		*  @param vec the vector in linear combination
+		*/
+		PetscVectorWrapperComb(const PetscVector &vec);
+
+		/** @brief Constructor from combination node.
+		* 
+		*  Each combination node will be recalled to combination. 
+		*  Therefore we can operate (define operators) with only combinations, not with nodes. 
+		* 
+		*  @param comb_node node of linear combination
+		*/
+		PetscVectorWrapperComb(const PetscVectorWrapperCombNode &comb_node);
+
+		/** @brief Constructor from stand-alone subvector.
+		* 
+		*  If the subvector is given in linear combination without coefficient, 
+		*  it will be added to the combination as a node with coefficient 1.0.
+		* 
+		*  @param subvec the subvector in linear combination
+		*/
+		PetscVectorWrapperComb(PetscVectorWrapperSub subvec);
+
+		/** @brief Destructor.
+		* 
+		*  Destroy the list with linear combination nodes.
+		* 
+		*  @todo how to destroy the list? element after element?
+		*/
 		~PetscVectorWrapperComb();
 
-		/* general functions */
+		/** @brief Get number of nodes in linear combination.
+		* 
+		*  Get the size of inner list of linear combination nodes.
+		* 
+		*  @return number of nodes in linear combination
+		*/
 		int get_listsize() const;
+
+		/** @brief Get the dimension of vectors.
+		* 
+		*  Get the size of the last added vector.
+		* 
+		*  @return size of the vector
+		*/
 		int get_vectorsize() const;
+
+		/** @brief Get the first vector in linear combination.
+		* 
+		*  Usefull if we want to allocate the vector on the left side of assignment operator,
+		*  i.e. if the result vector was not allocated.
+		* 
+		*  @return vector
+		*  @todo private?
+		*/
 		Vec get_first_vector();
-		void append(const PetscVectorWrapperCombNode &new_node);
+		
+		/** @brief Append node to linear combination.
+		* 
+		*  Append new node to the existing list of linear combination nodes.
+		* 
+		*  @param node new node to be appended
+		*/
+		void append(const PetscVectorWrapperCombNode &node);
+
+		/** @brief Merge with given combination.
+		* 
+		*  Merge two lists with linear combinations.
+		*  
+		*  @param comb the second combinations
+		*/
 		void merge(const PetscVectorWrapperComb &comb);
+
+		/** @brief Perform the linear combination.
+		* 
+		*  Perform the linear combination and store result in given vector.
+		*  init_scale = 0 if the method was called from operator=
+		*  init_scale = 1 if the method was called from operator+=
+		* 
+		*  @param y result
+		*  @param init_scale initial scale of the result vector
+		*/
 		void compute(const Vec &y, double init_scale);
 		
 		/* print */
 		friend std::ostream &operator<<(std::ostream &output, PetscVectorWrapperComb comb);
 
-		/* operations with combinations */
+		/** @brief Scale.
+		* 
+		*  Scale all coefficients of nodes in the linear combination.
+		*  
+		*  @param alpha scalar
+		*  @param comb linear combination to be scaled
+		*/
 		friend const PetscVectorWrapperComb operator*(double alpha, PetscVectorWrapperComb comb);
+
+		/** @brief Addition operator.
+		* 
+		*  Add one combination to another.
+		*  
+		*  @param comb1 first linear combination
+		*  @param comb2 second linear combination
+		*/
 		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
+
+		/** @brief Subtraction operator.
+		* 
+		*  Substract one combination from another, i.e. scale the second one with -1.0 and perform addition.
+		*  
+		*  @param comb1 first linear combination
+		*  @param comb2 second linear combination
+		*/
 		friend const PetscVectorWrapperComb operator-(PetscVectorWrapperComb comb1, PetscVectorWrapperComb comb2);
 
 		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, double scalar);
@@ -284,8 +486,8 @@ class PetscVectorWrapperComb
 class PetscVectorWrapperCombNode
 {
 	private:
-		Vec inner_vector; /* pointer to vector (original Petsc Vec) in linear combination */
-		double coeff; /* coefficient in linear combination */
+		Vec inner_vector; /**< pointer to vector (original Petsc Vec) in linear combination */
+		double coeff; /**< coefficient in linear combination */
 
 	public:
 		/* constructors and destructor */
@@ -319,11 +521,11 @@ class PetscVectorWrapperCombNode
 class PetscVectorWrapperSub
 {
 	private:
-		IS subvector_is;
-		Vec inner_vector; /* original vector */
-		Vec subvector; /* subvector */
+		IS subvector_is; /**< the index set of subvector */
+		Vec inner_vector; /**< original vector */
+		Vec subvector; /**< subvector (created by VecGetSubVector) */
 
-		bool free_is; /* free index set in destructor */
+		bool free_is; /**< free index set in destructor or not */
 
 	public:
 

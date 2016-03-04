@@ -51,11 +51,11 @@ PetscVector::PetscVector(const PetscVectorWrapperComb &comb){
 PetscVector::~PetscVector(){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)DESTRUCTOR" << std::endl;
 
-	/* if there was any inner vector, then destroy it */
+	/* if there is any inner vector, then destroy it */
 	if(inner_vector){
 		if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - destroy inner vector" << std::endl;
 
-		/* if petsc was finalized in the meantime, then the vector was already destroyed */
+		/* if petsc was finalized in the meantime, then the vector has been already destroyed */
 		if(PETSC_INITIALIZED){
 			/* if the vector wasn't destroyed yet and the petsc is still running, then
 			 * destroy the vector */
@@ -151,7 +151,6 @@ void PetscVector::restore_array(double **arr){
 }
 
 
-
 void PetscVector::get_ownership(int *low, int *high){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_ownership(int*, int*)" << std::endl;
 
@@ -160,7 +159,7 @@ void PetscVector::get_ownership(int *low, int *high){
 	TRY( VecGetOwnershipRange(inner_vector, low, high) );
 }
 
-/* inner_vector = alpha*inner_vector */
+
 void PetscVector::scale(double alpha){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: scale(double)" << std::endl;
 
@@ -171,13 +170,14 @@ void PetscVector::scale(double alpha){
 }
 
 
-/* stream insertion << operator */
 std::ostream &operator<<(std::ostream &output, const PetscVector &vector)		
 {
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)OPERATOR: <<" << std::endl;
 
 	PetscScalar *arr_vector;
 	PetscInt i,local_size;
+	
+	// TODO: make more sofisticated for parallel vectors
 
 	output << "[";
 	TRY( VecGetLocalSize(vector.inner_vector,&local_size) );
@@ -206,14 +206,14 @@ PetscVector &PetscVector::operator=(const PetscVector &vec2){
 	/* vec1 is not initialized yet */
 	if (!inner_vector){
 		if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - creating new vector" << std::endl;		
-		VecDuplicate(vec2.inner_vector,&(this->inner_vector));
+		TRY( VecDuplicate(vec2.inner_vector,&(this->inner_vector)) );
 		this->valuesUpdate(); // TODO: has to be called?
 	}
 
 	/* else copy the values of inner vectors */
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - copy values" << std::endl;		
 	
-	VecCopy(vec2.inner_vector,inner_vector);
+	TRY( VecCopy(vec2.inner_vector,inner_vector) );
 	this->valuesUpdate(); // TODO: has to be called?
 	
 	return *this;	
