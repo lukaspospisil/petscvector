@@ -1,0 +1,5 @@
+\form#0:\[\mathrm{result} = \langle x,y \rangle = \sum\limits_{i = 0}^{size-1} x_i y_i\]
+\form#1:\[\mathrm{result} = \max \lbrace x_i, i = 0, \dots size-1 \rbrace\]
+\form#2:\[\mathrm{result} = \sum\limits_{i = 0}^{size-1} x_i \]
+\form#3:\[\mathrm{result} = \Vert x \Vert_2 = \sqrt{\sum\limits_{i = 0}^{size-1} x_i^2} \]
+\form#4:\[ x_i = \frac{x_i}{y_i}, ~~\forall i = 0, \dots, size-1 \]

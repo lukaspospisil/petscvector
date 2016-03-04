@@ -269,6 +269,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Scale all coefficients of nodes in the linear combination.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">alpha</td><td>scalar </td></tr>
+    <tr><td class="paramname">comb</td><td>linear combination to be scaled </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -347,6 +355,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Add one combination to another.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">comb1</td><td>first linear combination </td></tr>
+    <tr><td class="paramname">comb2</td><td>second linear combination </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -477,6 +493,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Substract one combination from another, i.e. scale the second one with -1.0 and perform addition.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">comb1</td><td>first linear combination </td></tr>
+    <tr><td class="paramname">comb2</td><td>second linear combination </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -555,6 +579,17 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Divide values of the inner vector by components of input vector. </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\[ x_i = \frac{x_i}{y_i}, ~~\forall i = 0, \dots, size-1 \]" src="form_4.png"/>
+</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>vector </td></tr>
+    <tr><td class="paramname">y</td><td>vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo:</a></b></dt><dd>this function is really strange </dd></dl>
 
 </div>
 </div>
@@ -834,7 +869,7 @@ Variables</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Mar 4 2016 12:36:34 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Mar 4 2016 13:38:20 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
