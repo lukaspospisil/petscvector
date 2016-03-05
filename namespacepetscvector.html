@@ -18,7 +18,9 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">PetscVector
+   &#160;<span id="projectnumber">0.1</span>
    </div>
+   <div id="projectbrief">Simple C++ Petsc wrapper for manipulation with vectors.</div>
   </td>
  </tr>
  </tbody>
@@ -54,8 +56,6 @@
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1GeneralMatrixRHS.html">GeneralMatrixRHS</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html">PetscVector</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">General class for manipulation with vectors.  <a href="classpetscvector_1_1PetscVector.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -182,6 +182,17 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Computes dot product of two given vectors. </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\[\mathrm{result} = \langle x,y \rangle = \sum\limits_{i = 0}^{size-1} x_i y_i\]" src="form_0.png"/>
+</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>first vector </td></tr>
+    <tr><td class="paramname">y</td><td>second vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000012">Todo:</a></b></dt><dd>control if inner_vectors were allocated </dd></dl>
 
 </div>
 </div>
@@ -198,6 +209,16 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Computes the maximum value in given vector. </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\[\mathrm{result} = \max \lbrace x_i, i = 0, \dots size-1 \rbrace\]" src="form_1.png"/>
+</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000013">Todo:</a></b></dt><dd>control if inner_vector wax allocated </dd></dl>
 
 </div>
 </div>
@@ -214,6 +235,16 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Computes the sum of components of given vector. </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\[\mathrm{result} = \Vert x \Vert_2 = \sqrt{\sum\limits_{i = 0}^{size-1} x_i^2} \]" src="form_3.png"/>
+</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000015">Todo:</a></b></dt><dd>control if inner_vector wax allocated </dd></dl>
 
 </div>
 </div>
@@ -240,6 +271,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Scale all coefficients of nodes in the linear combination.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">alpha</td><td>scalar </td></tr>
+    <tr><td class="paramname">comb</td><td>linear combination to be scaled </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -318,6 +357,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Add one combination to another.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">comb1</td><td>first linear combination </td></tr>
+    <tr><td class="paramname">comb2</td><td>second linear combination </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -448,6 +495,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Substract one combination from another, i.e. scale the second one with -1.0 and perform addition.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">comb1</td><td>first linear combination </td></tr>
+    <tr><td class="paramname">comb2</td><td>second linear combination </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -526,6 +581,17 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Divide values of the inner vector by components of input vector. </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\[ x_i = \frac{x_i}{y_i}, ~~\forall i = 0, \dots, size-1 \]" src="form_4.png"/>
+</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>vector </td></tr>
+    <tr><td class="paramname">y</td><td>vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000016">Todo:</a></b></dt><dd>this function is really strange </dd></dl>
 
 </div>
 </div>
@@ -604,6 +670,15 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Prints the content of inner_vector.</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">output</td><td>output stream </td></tr>
+    <tr><td class="paramname">vector</td><td>instance of <a class="el" href="classpetscvector_1_1PetscVector.html" title="General class for manipulation with vectors. ">PetscVector</a> to be printed </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000011">Todo:</a></b></dt><dd>print local portion of the vector </dd></dl>
 
 </div>
 </div>
@@ -740,6 +815,16 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Computes the sum of components of given vector. </p><p class="formulaDsp">
+<img class="formulaDsp" alt="\[\mathrm{result} = \sum\limits_{i = 0}^{size-1} x_i \]" src="form_2.png"/>
+</p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>vector </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="todo"><dt><b><a class="el" href="todo.html#_todo000014">Todo:</a></b></dt><dd>control if inner_vector wax allocated </dd></dl>
 
 </div>
 </div>
@@ -753,6 +838,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>brings an opportunity to call PetscVector(all) </p>
 
 </div>
 </div>
@@ -765,6 +851,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>defines the debug mode of the functions </p>
 
 </div>
 </div>
@@ -777,13 +864,14 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>to deal with PetscInitialize and PetscFinalize outside this class </p>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Mar 4 2016 00:19:18 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 5 2016 14:47:11 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>

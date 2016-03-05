@@ -18,7 +18,9 @@
  <tr style="height: 56px;">
   <td style="padding-left: 0.5em;">
    <div id="projectname">PetscVector
+   &#160;<span id="projectnumber">0.1</span>
    </div>
+   <div id="projectbrief">Simple C++ Petsc wrapper for manipulation with vectors.</div>
   </td>
  </tr>
  </tbody>
@@ -43,7 +45,7 @@
   </div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_9e6e9d7baf5d21aaec1f36a69edd87f6.html">include</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_d44c64559bbebec7f509842c48db8b23.html">include</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -72,8 +74,6 @@
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="nested-classes"></a>
 Data Structures</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1petscvector__all__type.html">petscvector::petscvector_all_type</a></td></tr>
-<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1GeneralMatrixRHS.html">petscvector::GeneralMatrixRHS&lt; VectorType &gt;</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classpetscvector_1_1PetscVector.html">petscvector::PetscVector</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">General class for manipulation with vectors.  <a href="classpetscvector_1_1PetscVector.html#details">More...</a><br /></td></tr>
@@ -110,7 +110,7 @@ Variables</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Header file with class delarations. </p>
-<p>This defines the basic layout of all used classes. In the end of the file, the files with specific implementations are included.</p>
+<p>This defines the basic layout of all used classes. In the end of the file, the files with specific implementations are included. This is the file which has to be included in the project to provide the work with Petsc vectors in Min-Lin Matlab style.</p>
 <dl class="section author"><dt>Author</dt><dd>Lukas Pospisil </dd></dl>
 <dl class="bug"><dt><b><a class="el" href="bug.html#_bug000001">Bug:</a></b></dt><dd>No known bugs. </dd></dl>
 </div><h2 class="groupheader">Macro Definition Documentation</h2>
@@ -127,6 +127,7 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+<p>Macro for dealing with PetscError. Each original Petsc function could by called using TRY(...). </p>
 
 </div>
 </div>
@@ -148,13 +149,14 @@ Variables</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+<p>to deal with PetscError </p>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Mar 4 2016 00:19:18 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 5 2016 14:47:11 for PetscVector by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.9.1
 </small></address>
