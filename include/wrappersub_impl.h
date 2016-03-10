@@ -301,6 +301,13 @@ double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subv
 
 
 
+/* conversion to double */
+PetscVectorWrapperSub::operator double()
+{
+	return this->get(0);
+}
+
+
 } /* end of petscvector namespace */
 
 #endif
