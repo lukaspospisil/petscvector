@@ -564,8 +564,6 @@ class PetscVectorWrapperSub
 		friend double sum(const PetscVectorWrapperSub subvec1);
 		friend double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subvec2);
 
-		operator double();
-
 };
 
 
