@@ -76,6 +76,15 @@ class PetscVector {
 		*  @param n global size of new vector
 		*/ 
 		PetscVector(int n);
+
+		/** @brief Create constructor.
+		*
+		*  Create sequential vector of given values and size n.
+		*
+		*  @param values array with values of array
+		*  @param n global size of new vector
+		*/ 
+		PetscVector(double *values, int n);
 		
 		/** @brief Duplicate constructor.
 		*

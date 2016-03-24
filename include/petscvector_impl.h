@@ -22,6 +22,16 @@ PetscVector::PetscVector(int n){
 }
 
 
+PetscVector::PetscVector(double *values, int n){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(values, int)" << std::endl;
+
+	TRY( VecCreateSeqWithArray(PETSC_COMM_SELF, 1, n, values, &inner_vector ) );
+	TRY( VecSetFromOptions(inner_vector) );
+
+	valuesUpdate();
+}
+
+
 PetscVector::PetscVector(const PetscVector &vec){
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)CONSTRUCTOR: PetscVector(&vec) ---- DUPLICATE ----" << std::endl;
 
