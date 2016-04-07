@@ -212,6 +212,18 @@ class PetscVector {
 		*/ 
 		void set(int index, double new_value);
 
+		/** @brief Compute pointwise multiplication.
+		*
+		*  Computes pointwise product of two given vectors.
+		*  \f[\mathrm{this}_i = x_i y_i \f]
+		*  uses Petsc function VecPointwiseMult(Vec w, Vec x,Vec y) 
+		* 
+		*  @param x first vector
+		*  @param y second vector
+		*  @todo control if inner_vectors were allocated
+		*/ 
+		void mul(const PetscVector &x, const PetscVector &y);
+
 		/** @brief Assignment operator.
 		*
 		*  Copy values from one vector to another.

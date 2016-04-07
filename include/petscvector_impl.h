@@ -102,6 +102,13 @@ void PetscVector::set(int index, double new_value){
 }
 
 
+/* this = mul(vec1,vec2) */
+void PetscVector::mul(const PetscVector &vec1, const PetscVector &vec2){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: mul(vec1,vec2)" << std::endl;
+
+	TRY( VecPointwiseMult(this->inner_vector,vec1.inner_vector,vec2.inner_vector));
+}
+
 Vec PetscVector::get_vector() const { // TODO: temp
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_vector()" << std::endl;
 		
