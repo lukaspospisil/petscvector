@@ -320,7 +320,7 @@ double dot(const PetscVectorWrapperSub x, const PetscVector &y)
 
 PetscVectorWrapperMul mul(PetscVectorWrapperSub subvec1, PetscVectorWrapperSub subvec2)
 {
-	return PetscVectorWrapperMul( subvec1.subvector, subvec1.subvector);
+	return PetscVectorWrapperMul( subvec1.subvector, subvec2.subvector);
 }
 
 } /* end of petscvector namespace */
