@@ -299,6 +299,10 @@ double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subv
 	return dot_value;
 }
 
+PetscVectorWrapperMul mul(PetscVectorWrapperSub subvec1, PetscVectorWrapperSub subvec2)
+{
+	return PetscVectorWrapperMul( subvec1.subvector, subvec1.subvector);
+}
 
 } /* end of petscvector namespace */
 

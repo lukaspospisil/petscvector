@@ -101,14 +101,6 @@ void PetscVector::set(int index, double new_value){
 	valuesUpdate();
 }
 
-
-/* this = mul(vec1,vec2) */
-void PetscVector::mul(const PetscVector &vec1, const PetscVector &vec2){
-	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: mul(vec1,vec2)" << std::endl;
-
-	TRY( VecPointwiseMult(this->inner_vector,vec1.inner_vector,vec2.inner_vector));
-}
-
 Vec PetscVector::get_vector() const { // TODO: temp
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_vector()" << std::endl;
 		
@@ -262,6 +254,23 @@ PetscVector &PetscVector::operator=(double scalar_value){
 	return *this;	
 }
 
+/* vec1 = mul(v1,v2), call vector-vector multiplication on mul 
+ * */
+PetscVector &PetscVector::operator=(PetscVectorWrapperMul mulinstance){
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)OPERATOR: (vec = mul)" << std::endl;
+
+	/* vec1 is not initialized yet */
+	if (!inner_vector){
+		if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << " - duplicate vector" << std::endl;		
+		TRY( VecDuplicate(mulinstance.get_vector1(),&inner_vector) );
+	}
+
+	/* vec = mul */
+	mulinstance.mul(inner_vector);
+
+	return *this;	
+}
+
 /* return subvector to be able to overload vector(index) = new_value */ 
 PetscVectorWrapperSub PetscVector::operator()(int index) const
 {   
@@ -391,7 +400,10 @@ const PetscVector operator/(const PetscVector &vec1, const PetscVector &vec2)
 	return vec1;
 }
 
-
+PetscVectorWrapperMul mul(const PetscVector &vec1, const PetscVector &vec2)
+{
+	return PetscVectorWrapperMul( vec1.inner_vector, vec2.inner_vector);
+}
 
 
 

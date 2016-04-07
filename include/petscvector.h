@@ -52,6 +52,10 @@ class PetscVectorWrapperCombNode;
 /* wrapper to allow subvectors */
 class PetscVectorWrapperSub; 
 
+/* wrapper to allow (vector or subvector) = mul(v1,v2) */
+class PetscVectorWrapperMul; 
+
+
 /** \class PetscVector
  *  \brief General class for manipulation with vectors.
  *
@@ -212,18 +216,6 @@ class PetscVector {
 		*/ 
 		void set(int index, double new_value);
 
-		/** @brief Compute pointwise multiplication.
-		*
-		*  Computes pointwise product of two given vectors.
-		*  \f[\mathrm{this}_i = x_i y_i \f]
-		*  uses Petsc function VecPointwiseMult(Vec w, Vec x,Vec y) 
-		* 
-		*  @param x first vector
-		*  @param y second vector
-		*  @todo control if inner_vectors were allocated
-		*/ 
-		void mul(const PetscVector &x, const PetscVector &y);
-
 		/** @brief Assignment operator.
 		*
 		*  Copy values from one vector to another.
@@ -250,6 +242,8 @@ class PetscVector {
 		*  @param comb linear combination
 		*/ 
 		PetscVector &operator=(PetscVectorWrapperComb comb);
+
+		PetscVector &operator=(PetscVectorWrapperMul mul);
 
 		friend void operator*=(PetscVector &vec1, double alpha);
 		friend void operator+=(const PetscVector &vec1, const PetscVectorWrapperComb comb);
@@ -353,6 +347,18 @@ class PetscVector {
 		*  @todo this function is really strange 
 		*/ 
 		friend const PetscVector operator/(const PetscVector &x, const PetscVector &y);
+
+		/** @brief Compute pointwise multiplication.
+		*
+		*  Computes pointwise product of two given vectors.
+		*  \f[\mathrm{mul}_i = x_i y_i \f]
+		*  uses Petsc function VecPointwiseMult(Vec w, Vec x,Vec y) 
+		* 
+		*  @param x first vector
+		*  @param y second vector
+		*  @todo control if inner_vectors were allocated
+		*/ 
+		friend PetscVectorWrapperMul mul(const PetscVector &x, const PetscVector &y);
 
 };
 
@@ -496,7 +502,7 @@ class PetscVectorWrapperComb
 
 		friend const PetscVectorWrapperComb operator+(PetscVectorWrapperComb comb1, double scalar);
 		friend const PetscVectorWrapperComb operator+(double scalar,PetscVectorWrapperComb comb2);
-		
+
 };
 
 
@@ -585,8 +591,48 @@ class PetscVectorWrapperSub
 		friend double sum(const PetscVectorWrapperSub subvec1);
 		friend double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subvec2);
 
+		/** @brief Compute pointwise multiplication.
+		*
+		*  Computes pointwise product of two given subvectors.
+		*  \f[\mathrm{mul}_i = x_i y_i \f]
+		*  uses Petsc function VecPointwiseMult(Vec w, Vec x,Vec y) 
+		* 
+		*  @param x first vector
+		*  @param y second vector
+		*  @todo control if inner_vectors were allocated
+		*/ 
+		friend PetscVectorWrapperMul mul(PetscVectorWrapperSub subvec1, PetscVectorWrapperSub subvec2);
+
 };
 
+/*! \class PetscVectorWrapperMul
+    \brief Wrapper for manipulation with mul(v1,v2).
+*/
+class PetscVectorWrapperMul
+{
+	private:
+		Vec inner_vector1; /**< first vector */
+		Vec inner_vector2; /**< second vector */
+	public:
+
+		PetscVectorWrapperMul(Vec inner_vector1, Vec innervector2);
+		~PetscVectorWrapperMul();
+
+		/** @brief Compute pointwise multiplication.
+		*
+		*  Computes pointwise product of two given subvectors.
+		*  \f[\mathrm{mul}_i = x_i y_i \f]
+		*  uses Petsc function VecPointwiseMult(Vec w, Vec x,Vec y) 
+		* 
+		*  @param result output vector
+		*  @todo control if inner_vectors were allocated
+		*/ 
+		void mul(Vec result);
+
+		Vec get_vector1() const;
+		Vec get_vector2() const;
+		
+};
 
 
 
@@ -597,5 +643,6 @@ class PetscVectorWrapperSub
 #include "petscvector_impl.h"
 #include "wrappercomb_impl.h"
 #include "wrappersub_impl.h"
+#include "wrappermul_impl.h"
 
 #endif

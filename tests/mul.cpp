@@ -26,7 +26,7 @@ int main( int argc, char *argv[] )
     H(3) = 8;  D(3) = 1;
     H(4) = 2;  D(4) = 8;
 
-	E.mul(H,D);
+	E = mul(H,D);
 
     std::cout << "H:" << H << std::endl;
     std::cout << "D:" << D << std::endl;
