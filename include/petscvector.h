@@ -307,6 +307,10 @@ class PetscVector {
 		*/ 
 		friend double dot(const PetscVector &x, const PetscVector &y);
 
+		friend double dot(const PetscVector &x, const PetscVectorWrapperSub y);
+		friend double dot(const PetscVectorWrapperSub x, const PetscVector &y);
+
+
 		/** @brief Get the maximum value in vector.
 		*
 		*  Computes the maximum value in given vector.
@@ -590,6 +594,10 @@ class PetscVectorWrapperSub
 		/* binary operations */
 		friend double sum(const PetscVectorWrapperSub subvec1);
 		friend double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subvec2);
+
+		friend double dot(const PetscVector &x, const PetscVectorWrapperSub y);
+		friend double dot(const PetscVectorWrapperSub x, const PetscVector &y);
+
 
 		/** @brief Compute pointwise multiplication.
 		*

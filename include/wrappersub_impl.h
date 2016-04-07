@@ -299,6 +299,25 @@ double dot(const PetscVectorWrapperSub subvec1, const PetscVectorWrapperSub subv
 	return dot_value;
 }
 
+double dot(const PetscVector &x, const PetscVectorWrapperSub y)
+{
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperSub)FUNCTION: dot(vec,subvec)" << std::endl;
+
+	double dot_value;
+	TRY( VecDot(x.inner_vector,y.subvector,&dot_value));
+	return dot_value;
+}
+
+double dot(const PetscVectorWrapperSub x, const PetscVector &y)
+{
+	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(WrapperSub)FUNCTION: dot(subvec,vec)" << std::endl;
+
+	double dot_value;
+	TRY( VecDot(y.inner_vector,x.subvector,&dot_value));
+	return dot_value;
+}
+
+
 PetscVectorWrapperMul mul(PetscVectorWrapperSub subvec1, PetscVectorWrapperSub subvec2)
 {
 	return PetscVectorWrapperMul( subvec1.subvector, subvec1.subvector);
