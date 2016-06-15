@@ -216,6 +216,24 @@ class PetscVector {
 		*/ 
 		void set(int index, double new_value);
 
+		/** @brief Load values from file to PETSC_COMM_SELF.
+		*
+		*  Uses PetscViewerBinaryOpen, PETSC_COMM_SELF.
+		*
+		*  @param filename name of file with values
+		*  @todo control if file exists
+		*/ 
+		void load_local(std::string filename);
+
+		/** @brief Load values from file to PETSC_COMM_WORLD.
+		*
+		*  Uses PetscViewerBinaryOpen, PETSC_COMM_WORLD.
+		*
+		*  @param filename name of file with values
+		*  @todo control if file exists
+		*/ 
+		void load_global(std::string filename);
+
 		/** @brief Assignment operator.
 		*
 		*  Copy values from one vector to another.

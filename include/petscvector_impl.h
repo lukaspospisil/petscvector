@@ -101,6 +101,48 @@ void PetscVector::set(int index, double new_value){
 	valuesUpdate();
 }
 
+void PetscVector::load_local(std::string filename){
+	if(!this->inner_vector){
+		TRY( VecCreate(PETSC_COMM_SELF,&inner_vector) );
+	}
+
+	//TODO: check if file exists
+
+	/* prepare viewer to load from file */
+	PetscViewer mviewer;
+	TRY( PetscViewerCreate(PETSC_COMM_SELF, &mviewer) );
+	TRY( PetscViewerBinaryOpen(PETSC_COMM_SELF ,filename.c_str(), FILE_MODE_READ, &mviewer) );
+	
+	/* load vector from viewer */
+	TRY( VecLoad(this->inner_vector, mviewer) );
+
+	/* destroy the viewer */
+	TRY( PetscViewerDestroy(&mviewer) );
+
+	valuesUpdate();
+}
+
+void PetscVector::load_global(std::string filename){
+	if(!this->inner_vector){
+		TRY( VecCreate(PETSC_COMM_WORLD,&inner_vector) );
+	}
+
+	//TODO: check if file exists
+
+	/* prepare viewer to load from file */
+	PetscViewer mviewer;
+	TRY( PetscViewerCreate(PETSC_COMM_WORLD, &mviewer) );
+	TRY( PetscViewerBinaryOpen(PETSC_COMM_WORLD ,filename.c_str(), FILE_MODE_READ, &mviewer) );
+	
+	/* load vector from viewer */
+	TRY( VecLoad(this->inner_vector, mviewer) );
+
+	/* destroy the viewer */
+	TRY( PetscViewerDestroy(&mviewer) );
+
+	valuesUpdate();
+}
+
 Vec PetscVector::get_vector() const { // TODO: temp
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_vector()" << std::endl;
 		
