@@ -160,6 +160,23 @@ void PetscVector::save_binary(std::string filename){
 	valuesUpdate();
 }
 
+void PetscVector::save_ascii(std::string filename){
+	//TODO: check if vector exists
+
+	/* prepare viewer to save to file */
+	PetscViewer mviewer;
+	TRY( PetscViewerCreate(PETSC_COMM_WORLD, &mviewer) );
+	TRY( PetscViewerASCIIOpen(PETSC_COMM_WORLD ,filename.c_str(), &mviewer) );
+	
+	/* load vector from viewer */
+	TRY( VecView(this->inner_vector, mviewer) );
+
+	/* destroy the viewer */
+	TRY( PetscViewerDestroy(&mviewer) );
+
+	valuesUpdate();
+}
+
 Vec PetscVector::get_vector() const { // TODO: temp
 	if(DEBUG_MODE_PETSCVECTOR >= 100) std::cout << "(PetscVector)FUNCTION: get_vector()" << std::endl;
 		

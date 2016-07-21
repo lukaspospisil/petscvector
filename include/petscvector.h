@@ -243,6 +243,15 @@ class PetscVector {
 		*/ 
 		void save_binary(std::string filename);
 
+		/** @brief Save vector to file in PETSc ASCII format
+		*
+		*  Uses PetscViewerASCIIOpen, PETSC_COMM_WORLD.
+		*
+		*  @param filename name of file
+		*  @todo control if vector exists
+		*/ 
+		void save_ascii(std::string filename);
+
 		/** @brief Assignment operator.
 		*
 		*  Copy values from one vector to another.
